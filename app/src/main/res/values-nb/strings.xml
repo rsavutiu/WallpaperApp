@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Overskyet landskap</string>
+    <string name="query_sunny">Solrikt landskap</string>
+    <string name="query_rainy">Regnfullt landskap</string>
+    <string name="query_snowy">Snødekt landskap</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="setup_dynamic_wallpaper">Sett opp dynamisk bakgrunn</string>
+    <string name="wallpaper_updated">Atmos: Bakgrunnsbilde oppdatert!</string>
+    <string name="stage_location">Henter posisjon…</string>
+    <string name="stage_weather">Henter vær og bilde…</string>
+    <string name="stage_wallpaper">Bruker bakgrunnsbilde…</string>
+    <string name="stage_completed">Fullført</string>
+    <string name="run_immediately">Kjør umiddelbart</string>
+    <string name="humidity_precip_format">Luftfuktighet: %1$d%% | Nedbør: %2$.1fmm</string>
+    <string name="initializing">Initialiserer…</string>
+    <string name="condition_clear">Klarvær</string>
+    <string name="condition_cloudy">Overskyet</string>
+    <string name="condition_fog">Tåke</string>
+    <string name="condition_drizzle">Yr</string>
+    <string name="condition_freezing_drizzle">Underkjølt yr</string>
+    <string name="condition_rain">Regn</string>
+    <string name="condition_freezing_rain">Underkjølt regn</string>
+    <string name="condition_snow">Snøfall</string>
+    <string name="condition_snow_grains">Snøkorn</string>
+    <string name="condition_rain_showers">Regnbyger</string>
+    <string name="condition_snow_showers">Snøbyer</string>
+    <string name="condition_thunderstorm">Tordenvær</string>
+    <string name="condition_thunderstorm_hail">Torden med hagl</string>
+    <string name="condition_unknown">Ukjent</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

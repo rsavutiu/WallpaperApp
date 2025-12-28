@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Zatažená krajina</string>
+    <string name="query_sunny">Slunečná krajina</string>
+    <string name="query_rainy">Deštivá krajina</string>
+    <string name="query_snowy">Zasněžená krajina</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="setup_dynamic_wallpaper">Nastavit dynamickou tapetu</string>
+    <string name="wallpaper_updated">Atmos: Tapeta aktualizována!</string>
+    <string name="stage_location">Zjišťování polohy…</string>
+    <string name="stage_weather">Stahování počasí a obrazu…</string>
+    <string name="stage_wallpaper">Nastavování tapety…</string>
+    <string name="stage_completed">Dokončeno</string>
+    <string name="run_immediately">Spustit ihned</string>
+    <string name="humidity_precip_format">Vlhkost: %1$d%% | Srážky: %2$.1fmm</string>
+    <string name="initializing">Inicializace…</string>
+    <string name="condition_clear">Jasno</string>
+    <string name="condition_cloudy">Oblačno</string>
+    <string name="condition_fog">Mlha</string>
+    <string name="condition_drizzle">Mrholení</string>
+    <string name="condition_freezing_drizzle">Namrzající mrholení</string>
+    <string name="condition_rain">Déšť</string>
+    <string name="condition_freezing_rain">Namrzající déšť</string>
+    <string name="condition_snow">Sněžení</string>
+    <string name="condition_snow_grains">Sněhová krupice</string>
+    <string name="condition_rain_showers">Dešťové přeháňky</string>
+    <string name="condition_snow_showers">Sněhové přeháňky</string>
+    <string name="condition_thunderstorm">Bouřka</string>
+    <string name="condition_thunderstorm_hail">Bouřka s kroupami</string>
+    <string name="condition_unknown">Neznámé</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

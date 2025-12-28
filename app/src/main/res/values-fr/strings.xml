@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Paysages couverts</string>
+    <string name="query_sunny">Paysages ensoleillés</string>
+    <string name="query_rainy">Paysages pluvieux</string>
+    <string name="query_snowy">Paysages enneigés</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="metadata_type_nasa">nasa_apod</string>
+    <string name="metadata_type_unsplash">unsplash</string>
+    <string name="setup_dynamic_wallpaper">Configurer le fond d\'écran dynamique</string>
+    <string name="wallpaper_updated">Atmos : Fond d\'écran mis à jour !</string>
+    <string name="stage_location">Obtention de la position…</string>
+    <string name="stage_weather">Récupération météo et image…</string>
+    <string name="stage_wallpaper">Application du fond d\'écran…</string>
+    <string name="stage_completed">Terminé</string>
+    <string name="run_immediately">Exécuter immédiatement</string>
+    <string name="humidity_precip_format">Humidité : %1$d%% | Précip : %2$.1fmm</string>
+    <string name="initializing">Initialisation…</string>
+    <string name="condition_clear">Ciel dégagé</string>
+    <string name="condition_cloudy">Nuageux</string>
+    <string name="condition_fog">Brouillard</string>
+    <string name="condition_drizzle">Bruine</string>
+    <string name="condition_freezing_drizzle">Bruine verglaçante</string>
+    <string name="condition_rain">Pluie</string>
+    <string name="condition_freezing_rain">Pluie verglaçante</string>
+    <string name="condition_snow">Chute de neige</string>
+    <string name="condition_snow_grains">Neige en grains</string>
+    <string name="condition_rain_showers">Averses de pluie</string>
+    <string name="condition_snow_showers">Averses de neige</string>
+    <string name="condition_thunderstorm">Orage</string>
+    <string name="condition_thunderstorm_hail">Orage avec grêle</string>
+    <string name="condition_unknown">Inconnu</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Paesaggi nuvolosi</string>
+    <string name="query_sunny">Paesaggi soleggiati</string>
+    <string name="query_rainy">Paesaggi piovosi</string>
+    <string name="query_snowy">Paesaggi nevosi</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="setup_dynamic_wallpaper">Imposta sfondo dinamico</string>
+    <string name="wallpaper_updated">Atmos: Sfondo aggiornato!</string>
+    <string name="stage_location">Rilevamento posizione…</string>
+    <string name="stage_weather">Recupero meteo e immagine…</string>
+    <string name="stage_wallpaper">Applicazione sfondo…</string>
+    <string name="stage_completed">Completato</string>
+    <string name="run_immediately">Esegui immediatamente</string>
+    <string name="humidity_precip_format">Umidità: %1$d%% | Precip: %2$.1fmm</string>
+    <string name="initializing">Inizializzazione…</string>
+    <string name="condition_clear">Cielo sereno</string>
+    <string name="condition_cloudy">Nuvoloso</string>
+    <string name="condition_fog">Nebbia</string>
+    <string name="condition_drizzle">Pioggerella</string>
+    <string name="condition_freezing_drizzle">Pioggerella gelata</string>
+    <string name="condition_rain">Pioggia</string>
+    <string name="condition_freezing_rain">Pioggia gelata</string>
+    <string name="condition_snow">Neve</string>
+    <string name="condition_snow_grains">Neve granulosa</string>
+    <string name="condition_rain_showers">Rovesci di pioggia</string>
+    <string name="condition_snow_showers">Rovesci di neve</string>
+    <string name="condition_thunderstorm">Temporale</string>
+    <string name="condition_thunderstorm_hail">Temporale con grandine</string>
+    <string name="condition_unknown">Sconosciuto</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

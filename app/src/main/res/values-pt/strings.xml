@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Paisagens nubladas</string>
+    <string name="query_sunny">Paisagens ensolaradas</string>
+    <string name="query_rainy">Paisagens chuvosas</string>
+    <string name="query_snowy">Paisagens nevadas</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="setup_dynamic_wallpaper">Configurar fundo dinâmico</string>
+    <string name="wallpaper_updated">Atmos: Fundo atualizado!</string>
+    <string name="stage_location">Obtendo localização…</string>
+    <string name="stage_weather">Obtendo clima e imagem…</string>
+    <string name="stage_wallpaper">Aplicando fundo…</string>
+    <string name="stage_completed">Concluído</string>
+    <string name="run_immediately">Executar imediatamente</string>
+    <string name="humidity_precip_format">Humidade: %1$d%% | Precip: %2$.1fmm</string>
+    <string name="initializing">Inicializando…</string>
+    <string name="condition_clear">Céu limpo</string>
+    <string name="condition_cloudy">Nublado</string>
+    <string name="condition_fog">Nevoeiro</string>
+    <string name="condition_drizzle">Chuvisco</string>
+    <string name="condition_freezing_drizzle">Chuvisco gelado</string>
+    <string name="condition_rain">Chuva</string>
+    <string name="condition_freezing_rain">Chuva gelada</string>
+    <string name="condition_snow">Neve</string>
+    <string name="condition_snow_grains">Neve granulada</string>
+    <string name="condition_rain_showers">Aguaceiros</string>
+    <string name="condition_snow_showers">Aguaceiros de neve</string>
+    <string name="condition_thunderstorm">Trovoada</string>
+    <string name="condition_thunderstorm_hail">Trovoada com granizo</string>
+    <string name="condition_unknown">Desconhecido</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

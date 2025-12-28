@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Peisaje înnorate</string>
+    <string name="query_sunny">Peisaje însorite</string>
+    <string name="query_rainy">Peisaje ploioase</string>
+    <string name="query_snowy">Peisaje înzăpezite</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="setup_dynamic_wallpaper">Configurează fundal dinamic</string>
+    <string name="wallpaper_updated">Atmos: Fundal actualizat!</string>
+    <string name="stage_location">Se obține locația…</string>
+    <string name="stage_weather">Se obține vremea și imaginea…</string>
+    <string name="stage_wallpaper">Se aplică fundalul…</string>
+    <string name="stage_completed">Finalizat</string>
+    <string name="run_immediately">Execută imediat</string>
+    <string name="humidity_precip_format">Umiditate: %1$d%% | Precip: %2$.1fmm</string>
+    <string name="initializing">Se inițializează…</string>
+    <string name="condition_clear">Cer senin</string>
+    <string name="condition_cloudy">Înnorat</string>
+    <string name="condition_fog">Ceață</string>
+    <string name="condition_drizzle">Boira</string>
+    <string name="condition_freezing_drizzle">Burniță înghețată</string>
+    <string name="condition_rain">Ploaie</string>
+    <string name="condition_freezing_rain">Ploaie înghețată</string>
+    <string name="condition_snow">Ninsoare</string>
+    <string name="condition_snow_grains">Zăpadă grăunțoasă</string>
+    <string name="condition_rain_showers">Averse de ploaie</string>
+    <string name="condition_snow_showers">Averse de ninsoare</string>
+    <string name="condition_thunderstorm">Furtună</string>
+    <string name="condition_thunderstorm_hail">Furtună cu grindină</string>
+    <string name="condition_unknown">Necunoscut</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

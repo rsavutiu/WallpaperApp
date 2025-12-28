@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Bewolkte landschappen</string>
+    <string name="query_sunny">Zonnige landschappen</string>
+    <string name="query_rainy">Regenachtige landschappen</string>
+    <string name="query_snowy">Besneeuwde landschappen</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="setup_dynamic_wallpaper">Dynamische achtergrond instellen</string>
+    <string name="wallpaper_updated">Atmos: Achtergrond bijgewerkt!</string>
+    <string name="stage_location">Locatie ophalen…</string>
+    <string name="stage_weather">Weer en afbeelding ophalen…</string>
+    <string name="stage_wallpaper">Achtergrond toepassen…</string>
+    <string name="stage_completed">Voltooid</string>
+    <string name="run_immediately">Onmiddellijk uitvoeren</string>
+    <string name="humidity_precip_format">Luchtvochtigheid: %1$d%% | Neerslag: %2$.1fmm</string>
+    <string name="initializing">Initialiseren…</string>
+    <string name="condition_clear">Onbewolkt</string>
+    <string name="condition_cloudy">Bewolkt</string>
+    <string name="condition_fog">Mist</string>
+    <string name="condition_drizzle">Motregen</string>
+    <string name="condition_freezing_drizzle">Ijskoude motregen</string>
+    <string name="condition_rain">Regen</string>
+    <string name="condition_freezing_rain">Ijskoude regen</string>
+    <string name="condition_snow">Sneeuwval</string>
+    <string name="condition_snow_grains">Sneeuwkorrels</string>
+    <string name="condition_rain_showers">Regenbuien</string>
+    <string name="condition_snow_showers">Sneeuwbuien</string>
+    <string name="condition_thunderstorm">Onweer</string>
+    <string name="condition_thunderstorm_hail">Onweer met hagel</string>
+    <string name="condition_unknown">Onbekend</string>
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+</resources>

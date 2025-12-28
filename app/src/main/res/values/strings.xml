@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">Atmos</string>
+    <string name="query_overcast">Overcast Landscapes</string>
+    <string name="query_sunny">Sunny Landscapes</string>
+    <string name="query_rainy">Rainy Landscapes</string>
+    <string name="query_snowy">Snowy Landscapes</string>
+    <string name="attribution_unsplash">Unsplash / %s</string>
+    <string name="attribution_nasa">NASA/JPL</string>
+    <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="metadata_type_nasa">nasa_apod</string>
+    <string name="metadata_type_unsplash">unsplash</string>
+    <string name="setup_dynamic_wallpaper">Setup Dynamic Wallpaper</string>
+    <string name="wallpaper_updated">Atmos: Wallpaper updated!</string>
+    
+    <string name="stage_location">Getting Location…</string>
+    <string name="stage_weather">Fetching Weather &amp; Image…</string>
+    <string name="stage_wallpaper">Applying Wallpaper…</string>
+    <string name="stage_completed">Completed</string>
+    
+    <string name="run_immediately">Run Immediately</string>
+    <string name="humidity_precip_format">Humidity: %1$d%% | Precip: %2$.1fmm</string>
+    <string name="initializing">Initializing…</string>
+    
+    <string name="condition_clear">Clear sky</string>
+    <string name="condition_cloudy">Cloudy</string>
+    <string name="condition_fog">Fog</string>
+    <string name="condition_drizzle">Drizzle</string>
+    <string name="condition_freezing_drizzle">Freezing Drizzle</string>
+    <string name="condition_rain">Rain</string>
+    <string name="condition_freezing_rain">Freezing Rain</string>
+    <string name="condition_snow">Snow fall</string>
+    <string name="condition_snow_grains">Snow grains</string>
+    <string name="condition_rain_showers">Rain showers</string>
+    <string name="condition_snow_showers">Snow showers</string>
+    <string name="condition_thunderstorm">Thunderstorm</string>
+    <string name="condition_thunderstorm_hail">Thunderstorm with hail</string>
+    <string name="condition_unknown">Unknown</string>
+    
+    <string name="unit_c">°C</string>
+    <string name="unit_f">°F</string>
+
+    <string name="debug_image_provider">Debug Image Provider:</string>
+    <string name="provider_unsplash">Unsplash</string>
+    <string name="provider_pexels">Pexels</string>
+    <string name="provider_pixabay">Pixabay</string>
+    <string name="provider_sourcesplash">SourceSplash</string>
+    <string name="provider_nasa">NASA</string>
+</resources>
