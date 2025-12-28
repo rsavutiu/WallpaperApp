@@ -55,9 +55,7 @@ class MainActivity : ComponentActivity() {
             val locationPermissionLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestMultiplePermissions()
             ) { permissions ->
-                if (permissions.values.all { it }) {
-                    // Permissions granted
-                }
+
             }
 
             LaunchedEffect(Unit) {
