@@ -17,7 +17,7 @@ Atmos is a sophisticated Android application that transforms your device's backg
   - **Volumetric Fog**: Swirling fractal mist that reacts to your screen.
   - **Cloud Drift**: Subtle, evolving cloud layers.
 - **Android TV Integration**: Fully optimized for the big screen, including a dynamic screensaver (Daydream).
-- **Material You**: Harmonious UI that adapts to your system theme.
+- **Material UI**: Harmonious UI that adapts to your system theme.
 - **Intelligent Background Updates**: Powered by WorkManager for battery-efficient, periodic refreshes.
 
 ## Tech Stack
