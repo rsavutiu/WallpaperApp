@@ -25,6 +25,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val LONGITUDE = doublePreferencesKey("longitude")
         val LATITUDE = doublePreferencesKey("latitude")
         val PREFERRED_PROVIDER = stringPreferencesKey("preferred_provider")
+        val USE_LOCATION = booleanPreferencesKey("use_location")
     }
 
     override val isCelsius: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -69,6 +70,16 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     override suspend fun setPreferredImageProvider(provider: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PREFERRED_PROVIDER] = provider
+        }
+    }
+
+    override val useLocation: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.USE_LOCATION] ?: false
+    }
+
+    override suspend fun setUseLocation(useLocation: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.USE_LOCATION] = useLocation
         }
     }
 }

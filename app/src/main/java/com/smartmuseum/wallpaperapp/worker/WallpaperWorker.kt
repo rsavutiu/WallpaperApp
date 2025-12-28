@@ -20,7 +20,8 @@ class WallpaperWorker @AssistedInject constructor(
     private val getAtmosImageUseCase: GetAtmosImageUseCase,
     private val updateWallpaperUseCase: UpdateWallpaperUseCase,
     private val locationTracker: LocationTracker,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val flickrImageProvider: com.smartmuseum.wallpaperapp.data.repository.FlickrImageProvider
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -40,7 +41,12 @@ class WallpaperWorker @AssistedInject constructor(
         }
 
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_weather)))
-        val atmosImageResult = getAtmosImageUseCase(lastKnownLocation.first, lastKnownLocation.second)
+        val useLocation = kotlinx.coroutines.flow.first(userPreferencesRepository.useLocation)
+        val atmosImageResult = if (useLocation) {
+            flickrImageProvider.fetchImage("${lastKnownLocation.first},${lastKnownLocation.second}")
+        } else {
+            getAtmosImageUseCase(lastKnownLocation.first, lastKnownLocation.second)
+        }
         
         return atmosImageResult.fold(
             onSuccess = { atmosImage ->

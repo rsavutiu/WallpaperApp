@@ -102,6 +102,18 @@ class MainActivity : ComponentActivity() {
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
+                                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                    Checkbox(
+                                        checked = uiState.useLocation,
+                                        onCheckedChange = { viewModel.toggleUseLocation() },
+                                        colors = CheckboxDefaults.colors(checkmarkColor = MaterialTheme.colorScheme.primary)
+                                    )
+                                    Text(
+                                        text = "Use Location for Wallpapers",
+                                        color = androidx.compose.ui.graphics.Color.White,
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
 
                                 Button(
                                     onClick = {

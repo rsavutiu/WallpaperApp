@@ -31,7 +31,8 @@ data class MainUiState(
     val isLoading: Boolean = false,
     val loadingProgress: Float = 0f,
     val loadingMessage: String = "",
-    val preferredProvider: String = "Unsplash"
+    val preferredProvider: String = "Unsplash",
+    val useLocation: Boolean = false
 )
 
 @HiltViewModel
@@ -62,6 +63,11 @@ class MainViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(preferredProvider = provider)
             }
         }
+        viewModelScope.launch {
+            userPreferencesRepository.useLocation.collect { useLocation ->
+                _uiState.value = _uiState.value.copy(useLocation = useLocation)
+            }
+        }
     }
 
     private fun observeUpdateSignal() {
@@ -81,6 +87,12 @@ class MainViewModel @Inject constructor(
     fun setImageProvider(provider: String) {
         viewModelScope.launch {
             userPreferencesRepository.setPreferredImageProvider(provider)
+        }
+    }
+
+    fun toggleUseLocation() {
+        viewModelScope.launch {
+            userPreferencesRepository.setUseLocation(!_uiState.value.useLocation)
         }
     }
 

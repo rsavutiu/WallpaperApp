@@ -24,6 +24,30 @@ class UnsplashImageProvider @Inject constructor(
     }
 }
 
+class FlickrImageProvider @Inject constructor(
+    private val api: FlickrApi
+) : ImageProvider {
+    override val name: String = "Flickr"
+    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
+        // Assuming query is "latitude,longitude"
+        val parts = query.split(",")
+        val lat = parts[0].toDouble()
+        val lon = parts[1].toDouble()
+        val response = api.searchImages(BuildConfig.FLICKR_API_KEY, lat, lon)
+        val photo = response.photos.photo.random()
+        val photoUrl = "https://farm${photo.farm}.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_b.jpg"
+        Result.success(AtmosImage(
+            id = photo.id,
+            url = photoUrl,
+            blurHash = null,
+            attribution = "Flickr",
+            metadata = mapOf("type" to "flickr")
+        ))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+}
+
 class NasaImageProvider @Inject constructor(
     private val api: NasaApi
 ) : ImageProvider {

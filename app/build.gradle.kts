@@ -30,6 +30,7 @@ android {
         buildConfigField("String", "UNSPLASH_ACCESS_KEY", "\"${localProperties.getProperty("UNSPLASH_ACCESS_KEY") ?: ""}\"")
         buildConfigField("String", "PIXABAY_API_KEY", "\"${localProperties.getProperty("PIXABAY_API_KEY") ?: ""}\"")
         buildConfigField("String", "PEXELS_API_KEY", "\"${localProperties.getProperty("PEXELS_API_KEY") ?: ""}\"")
+        buildConfigField("String", "FLICKR_API_KEY", "\"${localProperties.getProperty("FLICKR_API_KEY") ?: ""}\"")
     }
 
     buildTypes {

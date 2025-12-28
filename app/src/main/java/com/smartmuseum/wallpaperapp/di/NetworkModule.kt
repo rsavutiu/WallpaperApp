@@ -89,4 +89,15 @@ object NetworkModule {
             .build()
             .create(SourceSplashApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideFlickrApi(okHttpClient: OkHttpClient): FlickrApi {
+        return Retrofit.Builder()
+            .baseUrl(FlickrApi.BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(FlickrApi::class.java)
+    }
 }

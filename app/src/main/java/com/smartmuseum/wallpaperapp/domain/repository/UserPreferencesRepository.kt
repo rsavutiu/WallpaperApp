@@ -14,4 +14,7 @@ interface UserPreferencesRepository {
 
     val preferredImageProvider: Flow<String>
     suspend fun setPreferredImageProvider(provider: String)
+
+    val useLocation: Flow<Boolean>
+    suspend fun setUseLocation(useLocation: Boolean)
 }
