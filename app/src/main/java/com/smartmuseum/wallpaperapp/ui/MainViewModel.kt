@@ -102,7 +102,7 @@ class MainViewModel @Inject constructor(
                 val bitmap = BitmapFactory.decodeFile(it.absolutePath)
                 _uiState.value = _uiState.value.copy(currentWallpaper = bitmap)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Handle error
         }
     }
@@ -115,7 +115,7 @@ class MainViewModel @Inject constructor(
                 val atmosImage = Gson().fromJson(json, AtmosImage::class.java)
                 _uiState.value = _uiState.value.copy(atmosImage = atmosImage)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Handle error
         }
     }

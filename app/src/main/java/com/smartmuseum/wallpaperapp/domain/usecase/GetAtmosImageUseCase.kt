@@ -83,7 +83,7 @@ class GetAtmosImageUseCase @Inject constructor(
         }
     }
 
-    private fun getCityName(lat: Double, lon: Double): String? {
+    private suspend fun getCityName(lat: Double, lon: Double): String? {
         return try {
             val geocoder = Geocoder(context, Locale.getDefault())
             val addresses = geocoder.getFromLocation(lat, lon, 1)

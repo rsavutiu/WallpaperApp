@@ -13,6 +13,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -151,10 +152,15 @@ class MainActivity : ComponentActivity() {
 
                                 if (uiState.isLoading) {
                                     LinearProgressIndicator(
+                                        progress = {
+                                            uiState.loadingProgress
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(top = 8.dp),
-                                        progress = uiState.loadingProgress
+                                        color = ProgressIndicatorDefaults.linearColor,
+                                        trackColor = ProgressIndicatorDefaults.linearTrackColor,
+                                        strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                                     )
                                     Text(
                                         text = uiState.loadingMessage,
