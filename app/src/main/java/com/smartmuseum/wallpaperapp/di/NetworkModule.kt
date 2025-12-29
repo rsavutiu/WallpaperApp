@@ -1,6 +1,11 @@
 package com.smartmuseum.wallpaperapp.di
 
-import com.smartmuseum.wallpaperapp.data.remote.*
+import com.smartmuseum.wallpaperapp.data.remote.NasaApi
+import com.smartmuseum.wallpaperapp.data.remote.PexelsApi
+import com.smartmuseum.wallpaperapp.data.remote.PixabayApi
+import com.smartmuseum.wallpaperapp.data.remote.SourceSplashApi
+import com.smartmuseum.wallpaperapp.data.remote.UnsplashApi
+import com.smartmuseum.wallpaperapp.data.remote.WeatherApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -88,16 +93,5 @@ object NetworkModule {
             .client(okHttpClient)
             .build()
             .create(SourceSplashApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideFlickrApi(okHttpClient: OkHttpClient): FlickrApi {
-        return Retrofit.Builder()
-            .baseUrl(FlickrApi.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(FlickrApi::class.java)
     }
 }

@@ -3,8 +3,13 @@ package com.smartmuseum.wallpaperapp.ui
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.palette.graphics.Palette
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.gson.Gson
@@ -14,11 +19,13 @@ import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 
@@ -32,7 +39,9 @@ data class MainUiState(
     val loadingProgress: Float = 0f,
     val loadingMessage: String = "",
     val preferredProvider: String = "Unsplash",
-    val useLocation: Boolean = false
+    val useLocation: Boolean = false,
+    val isCalendarEnabled: Boolean = false,
+    val customColorScheme: ColorScheme? = null
 )
 
 @HiltViewModel
@@ -68,6 +77,11 @@ class MainViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(useLocation = useLocation)
             }
         }
+        viewModelScope.launch {
+            userPreferencesRepository.isCalendarEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(isCalendarEnabled = enabled)
+            }
+        }
     }
 
     private fun observeUpdateSignal() {
@@ -90,12 +104,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun toggleUseLocation() {
-        viewModelScope.launch {
-            userPreferencesRepository.setUseLocation(!_uiState.value.useLocation)
-        }
-    }
-
     fun refreshData() {
         viewModelScope.launch {
             loadLocalWallpaper()
@@ -104,31 +112,70 @@ class MainViewModel @Inject constructor(
     }
 
     private fun loadLocalWallpaper() {
-        try {
-            val rawFile = File(application.filesDir, "atmos_raw.png")
-            val wallpaperFile = File(application.filesDir, "atmos_wallpaper.png")
-            
-            val fileToLoad = if (rawFile.exists()) rawFile else if (wallpaperFile.exists()) wallpaperFile else null
-            
-            fileToLoad?.let {
-                val bitmap = BitmapFactory.decodeFile(it.absolutePath)
-                _uiState.value = _uiState.value.copy(currentWallpaper = bitmap)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val rawFile = File(application.filesDir, "atmos_raw.png")
+                val wallpaperFile = File(application.filesDir, "atmos_wallpaper.png")
+
+                val fileToLoad =
+                    if (rawFile.exists()) rawFile else if (wallpaperFile.exists()) wallpaperFile else null
+
+                fileToLoad?.let {
+                    val bitmap = BitmapFactory.decodeFile(it.absolutePath)
+                    if (bitmap != null) {
+                        val palette = Palette.from(bitmap).generate()
+                        val colorScheme = createColorSchemeFromPalette(palette)
+                        withContext(Dispatchers.Main) {
+                            _uiState.value = _uiState.value.copy(
+                                currentWallpaper = bitmap,
+                                customColorScheme = colorScheme
+                            )
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // Handle error
             }
-        } catch (_: Exception) {
-            // Handle error
         }
     }
 
+    private fun createColorSchemeFromPalette(palette: Palette): ColorScheme {
+        val primary = Color(palette.getVibrantColor(palette.getMutedColor(Color.Blue.toArgb())))
+        val secondary =
+            Color(palette.getDominantColor(palette.getVibrantColor(Color.Cyan.toArgb())))
+        val tertiary =
+            Color(palette.getLightVibrantColor(palette.getLightMutedColor(Color.Magenta.toArgb())))
+
+        // Create a basic dark color scheme based on the extracted colors
+        return darkColorScheme(
+            primary = primary,
+            secondary = secondary,
+            tertiary = tertiary,
+            surface = Color(palette.getDarkMutedColor(Color.DarkGray.toArgb())),
+            onPrimary = if (isColorDark(primary)) Color.White else Color.Black,
+            onSecondary = if (isColorDark(secondary)) Color.White else Color.Black
+        )
+    }
+
+    private fun isColorDark(color: Color): Boolean {
+        val luminance = 0.299 * color.red + 0.587 * color.green + 0.114 * color.blue
+        return luminance < 0.5
+    }
+
     private fun loadLocalMetadata() {
-        try {
-            val file = File(application.filesDir, "atmos_metadata.json")
-            if (file.exists()) {
-                val json = file.readText()
-                val atmosImage = Gson().fromJson(json, AtmosImage::class.java)
-                _uiState.value = _uiState.value.copy(atmosImage = atmosImage)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val file = File(application.filesDir, "atmos_metadata.json")
+                if (file.exists()) {
+                    val json = file.readText()
+                    val atmosImage = Gson().fromJson(json, AtmosImage::class.java)
+                    withContext(Dispatchers.Main) {
+                        _uiState.value = _uiState.value.copy(atmosImage = atmosImage)
+                    }
+                }
+            } catch (_: Exception) {
+                // Handle error
             }
-        } catch (_: Exception) {
-            // Handle error
         }
     }
 
@@ -140,11 +187,8 @@ class MainViewModel @Inject constructor(
                     if (workInfo != null) {
                         val progressMessage = workInfo.progress.getString(WallpaperWorker.PROGRESS_KEY) ?: ""
                         val isRunning = workInfo.state == WorkInfo.State.RUNNING
-                        // We only show progress if it's currently RUNNING.
-                        // ENQUEUED, SUCCEEDED, FAILED etc. will hide the bar.
                         val shouldShowLoading = isRunning
-                        
-                        // Map progress message to a float value for the progress bar
+
                         val progressValue = when (progressMessage) {
                             application.getString(R.string.stage_location) -> 0.25f
                             application.getString(R.string.stage_weather) -> 0.50f
@@ -169,6 +213,18 @@ class MainViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
+
+    fun setCalendarEnabled(bool: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setCalendarEnabled(enabled = bool)
+        }
+    }
+
+    fun toggleUseLocation() {
+        viewModelScope.launch {
+            userPreferencesRepository.setUseLocation(!uiState.value.useLocation)
         }
     }
 }

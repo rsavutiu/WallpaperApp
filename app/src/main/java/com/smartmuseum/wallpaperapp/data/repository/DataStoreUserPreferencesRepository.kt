@@ -2,7 +2,12 @@ package com.smartmuseum.wallpaperapp.data.repository
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.*
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,6 +30,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val LONGITUDE = doublePreferencesKey("longitude")
         val LATITUDE = doublePreferencesKey("latitude")
         val PREFERRED_PROVIDER = stringPreferencesKey("preferred_provider")
+        val IS_CALENDAR_ENABLED = booleanPreferencesKey("is_calendar_enabled")
         val USE_LOCATION = booleanPreferencesKey("use_location")
     }
 
@@ -70,6 +76,16 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     override suspend fun setPreferredImageProvider(provider: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PREFERRED_PROVIDER] = provider
+        }
+    }
+
+    override val isCalendarEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.IS_CALENDAR_ENABLED] ?: false
+    }
+
+    override suspend fun setCalendarEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.IS_CALENDAR_ENABLED] = enabled
         }
     }
 

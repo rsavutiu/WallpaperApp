@@ -1,43 +1,51 @@
-# Atmos - Atmospheric Dynamic Wallpaper
+# Atmos - Dynamic Atmospheric Wallpaper
 
-Atmos is a sophisticated Android application that transforms your device's background into a living window to the world. It automatically updates your wallpaper based on your current local weather, time of day, and location, overlaying beautiful imagery with high-performance atmospheric effects.
+Atmos is a dynamic wallpaper application for Android and Android TV that transforms your background
+based on real-time weather, location, and your personal schedule.
 
 ## Features
 
-- **Dynamic Weather Sync**: Automatically matches your wallpaper to local conditions (Sunny, Rainy, Snowy, Foggy, etc.).
-- **Multi-Provider Support**: Choose from a variety of high-quality image sources:
-  - **Unsplash**: Premium curated photography.
-  - **Pexels**: Vibrant and artistic shots.
-  - **Pixabay**: Vast library of diverse imagery.
-  - **SourceSplash**: Random, lightweight Unsplash discovery.
-  - **NASA APOD**: Stunning celestial backgrounds for clear nights.
-- **AGSL Atmospheric Shaders**: Real-time, GPU-accelerated visual effects:
-  - **Natural Rain**: Multi-layered parallax drops with randomized timing.
-  - **Organic Snow**: Temperature-aware physics (Arctic powder vs. Wet flakes).
-  - **Volumetric Fog**: Swirling fractal mist that reacts to your screen.
-  - **Cloud Drift**: Subtle, evolving cloud layers.
-- **Android TV Integration**: Fully optimized for the big screen, including a dynamic screensaver (Daydream).
-- **Material UI**: Harmonious UI that adapts to your system theme.
-- **Intelligent Background Updates**: Powered by WorkManager for battery-efficient, periodic refreshes.
+- **Dynamic Weather Overlays**: Real-time AGSL shaders for rain, snow, fog, and thunderstorms that
+  react to actual weather conditions.
+- **Multi-Provider Imagery**: Fetches high-quality backgrounds from Unsplash, Pexels, Pixabay, and
+  NASA APOD.
+- **Material You Integration**: Automatically extracts colors from the current wallpaper using the
+  Palette API to theme the app UI.
+- **Calendar Integration**: Displays your today's schedule (Google Calendar) directly on the
+  wallpaper.
+- **Android TV Support**: Includes a dedicated Daydream screensaver mode optimized for large
+  screens.
+- **Localization**: Full support for over 15 languages.
 
-## Tech Stack
+## Architecture
 
-- **UI**: Jetpack Compose
-- **Graphics**: AGSL (Android Graphics Shading Language)
-- **Dependency Injection**: Hilt
-- **Networking**: Retrofit & OkHttp
-- **Async & Streams**: Kotlin Coroutines & Flow
-- **Image Loading**: Coil
-- **Local Storage**: DataStore (Preferences)
-- **Background Tasks**: WorkManager
+- **Clean Architecture**: Separation of concerns into Data, Domain, and UI layers.
+- **Jetpack Compose**: Modern declarative UI for both mobile and TV.
+- **WorkManager**: Periodic background updates to keep the wallpaper fresh.
+- **Hilt**: Dependency injection for a modular and testable codebase.
+- **AGSL (Android Graphics Shading Language)**: High-performance GPU-based weather effects.
 
 ## Setup
 
-1. Add your API keys to `local.properties`:
+1. Clone the repository.
+2. Add your API keys to `local.properties`:
    ```properties
-   NASA_API_KEY=your_key
-   UNSPLASH_ACCESS_KEY=your_key
-   PIXABAY_API_KEY=your_key
-   PEXELS_API_KEY=your_key
+   NASA_API_KEY=your_nasa_key
+   UNSPLASH_ACCESS_KEY=your_unsplash_key
+   PEXELS_API_KEY=your_pexels_key
+   PIXABAY_API_KEY=your_pixabay_key
    ```
-2. Build and run on an Android 13+ (API 33) device for full shader support.
+3. Build and run on an Android device or TV emulator.
+
+## Testing on Android TV
+
+To test the Screensaver (Daydream) on an emulator:
+
+1. Go to **Settings > Device Preferences > Screen saver**.
+2. Select **Screen saver** and choose **Atmos**.
+3. Use `adb shell am startservice -n com.smartmuseum.wallpaperapp/.ui.dream.AtmosDreamService` to
+   trigger it immediately.
+
+## License
+
+MIT License

@@ -7,8 +7,6 @@
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="metadata_type_nasa">nasa_apod</string>
-    <string name="metadata_type_unsplash">unsplash</string>
     <string name="setup_dynamic_wallpaper">Setup Dynamic Wallpaper</string>
     <string name="wallpaper_updated">Atmos: Wallpaper updated!</string>
     
@@ -45,4 +43,12 @@
     <string name="provider_pixabay">Pixabay</string>
     <string name="provider_sourcesplash">SourceSplash</string>
     <string name="provider_nasa">NASA</string>
+
+    <string name="tab_setup">Setup</string>
+    <string name="tab_calendar">Calendar</string>
+    <string name="enable_calendar">Enable Calendar Sync</string>
+    <string name="calendar_permission_required">Calendar permission is required to show events on your wallpaper.</string>
+    <string name="no_events_today">No events today</string>
+    <string name="use_location_wallpapers">Use location for wallpapers</string>
+    <string name="todays_schedule">Today\'s schedule</string>
 </resources>

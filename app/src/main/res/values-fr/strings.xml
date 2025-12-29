@@ -34,4 +34,18 @@
     <string name="condition_unknown">Inconnu</string>
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
+
+    <string name="debug_image_provider">Sélecteur d\'image (Debug) :</string>
+    <string name="provider_unsplash">Unsplash</string>
+    <string name="provider_pexels">Pexels</string>
+    <string name="provider_pixabay">Pixabay</string>
+    <string name="provider_sourcesplash">SourceSplash</string>
+    <string name="provider_nasa">NASA</string>
+
+    <string name="tab_setup">Configuration</string>
+    <string name="tab_calendar">Calendrier</string>
+    <string name="enable_calendar">Sincronisation Calendrier</string>
+    <string name="calendar_permission_required">L\'autorisation du calendrier est requise pour afficher les événements.</string>
+    <string name="no_events_today">Aucun événement aujourd\'hui</string>
+    <string name="use_location_wallpapers">Utiliser la localisation pour les images</string>
 </resources>

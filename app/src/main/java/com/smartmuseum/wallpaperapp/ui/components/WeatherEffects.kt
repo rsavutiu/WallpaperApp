@@ -2,10 +2,17 @@ package com.smartmuseum.wallpaperapp.ui.components
 
 import android.graphics.RuntimeShader
 import android.os.Build
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.ShaderBrush
@@ -133,7 +140,7 @@ const val SNOW_SHADER = WEATHER_HEADER + """
             float2 p = uv * scale;                 // Scale world to grid cells.
 
             float speed = (0.5 + layer * 0.3);     // Nearer snow falls faster.
-            p.y += iTime * speed;                  // Pattern moves DOWN over time.
+            p.y -= iTime * speed;                  // Pattern moves DOWN over time.
             
             float2 id = floor(p);                  // Discrete cell ID.
             

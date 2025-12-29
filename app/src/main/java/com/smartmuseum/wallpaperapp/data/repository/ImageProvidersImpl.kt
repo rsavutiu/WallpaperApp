@@ -1,7 +1,11 @@
 package com.smartmuseum.wallpaperapp.data.repository
 
 import com.smartmuseum.wallpaperapp.BuildConfig
-import com.smartmuseum.wallpaperapp.data.remote.*
+import com.smartmuseum.wallpaperapp.data.remote.NasaApi
+import com.smartmuseum.wallpaperapp.data.remote.PexelsApi
+import com.smartmuseum.wallpaperapp.data.remote.PixabayApi
+import com.smartmuseum.wallpaperapp.data.remote.SourceSplashApi
+import com.smartmuseum.wallpaperapp.data.remote.UnsplashApi
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.repository.ImageProvider
 import javax.inject.Inject
@@ -10,38 +14,17 @@ class UnsplashImageProvider @Inject constructor(
     private val api: UnsplashApi
 ) : ImageProvider {
     override val name: String = "Unsplash"
-    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
-        val response = api.getRandomPhoto(query, BuildConfig.UNSPLASH_ACCESS_KEY)
+    override suspend fun fetchImage(query: String, location: String?): Result<AtmosImage> = try {
+        // If location name is available, append it to the query for better local relevance
+        val finalQuery = if (!location.isNullOrBlank()) "$query $location" else query
+        val response = api.getRandomPhoto(finalQuery, BuildConfig.UNSPLASH_ACCESS_KEY)
         Result.success(AtmosImage(
             id = response.id,
             url = response.urls.regular,
             blurHash = response.blur_hash,
             attribution = "Unsplash / ${response.user.name}",
-            metadata = mapOf("type" to "unsplash", "description" to (response.description ?: ""))
-        ))
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-}
-
-class FlickrImageProvider @Inject constructor(
-    private val api: FlickrApi
-) : ImageProvider {
-    override val name: String = "Flickr"
-    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
-        // Assuming query is "latitude,longitude"
-        val parts = query.split(",")
-        val lat = parts[0].toDouble()
-        val lon = parts[1].toDouble()
-        val response = api.searchImages(BuildConfig.FLICKR_API_KEY, lat, lon)
-        val photo = response.photos.photo.random()
-        val photoUrl = "https://farm${photo.farm}.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_b.jpg"
-        Result.success(AtmosImage(
-            id = photo.id,
-            url = photoUrl,
-            blurHash = null,
-            attribution = "Flickr",
-            metadata = mapOf("type" to "flickr")
+            title = response.description ?: response.alt_description,
+            metadata = mapOf("type" to "unsplash")
         ))
     } catch (e: Exception) {
         Result.failure(e)
@@ -52,14 +35,16 @@ class NasaImageProvider @Inject constructor(
     private val api: NasaApi
 ) : ImageProvider {
     override val name: String = "NASA"
-    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
+    override suspend fun fetchImage(query: String, location: String?): Result<AtmosImage> = try {
         val response = api.getApod(BuildConfig.NASA_API_KEY)
         Result.success(AtmosImage(
             id = (response.date ?: "") + response.title + response.url,
             url = response.hdurl ?: response.url,
             blurHash = null,
             attribution = response.copyright ?: "NASA/JPL",
-            metadata = mapOf("type" to "nasa", "title" to response.title, "explanation" to response.explanation)
+            title = response.title,
+            explanation = response.explanation,
+            metadata = mapOf("type" to "nasa")
         ))
     } catch (e: Exception) {
         Result.failure(e)
@@ -70,15 +55,17 @@ class PixabayImageProvider @Inject constructor(
     private val api: PixabayApi
 ) : ImageProvider {
     override val name: String = "Pixabay"
-    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
-        val response = api.searchImages(BuildConfig.PIXABAY_API_KEY, query)
+    override suspend fun fetchImage(query: String, location: String?): Result<AtmosImage> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query $location" else query
+        val response = api.searchImages(BuildConfig.PIXABAY_API_KEY, finalQuery)
         val hit = response.hits.random()
         Result.success(AtmosImage(
             id = hit.id.toString(),
             url = hit.largeImageURL,
             blurHash = null,
             attribution = "Pixabay / ${hit.user}",
-            metadata = mapOf("type" to "pixabay", "tags" to hit.tags)
+            title = hit.tags,
+            metadata = mapOf("type" to "pixabay")
         ))
     } catch (e: Exception) {
         Result.failure(e)
@@ -89,15 +76,17 @@ class PexelsImageProvider @Inject constructor(
     private val api: PexelsApi
 ) : ImageProvider {
     override val name: String = "Pexels"
-    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
-        val response = api.searchImages(BuildConfig.PEXELS_API_KEY, query)
+    override suspend fun fetchImage(query: String, location: String?): Result<AtmosImage> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query $location" else query
+        val response = api.searchImages(BuildConfig.PEXELS_API_KEY, finalQuery)
         val photo = response.photos.random()
         Result.success(AtmosImage(
             id = photo.id.toString(),
             url = photo.src.large2x,
             blurHash = null,
             attribution = "Pexels / ${photo.photographer}",
-            metadata = mapOf("type" to "pexels", "alt" to photo.alt)
+            title = photo.alt,
+            metadata = mapOf("type" to "pexels")
         ))
     } catch (e: Exception) {
         Result.failure(e)
@@ -108,9 +97,10 @@ class SourceSplashImageProvider @Inject constructor(
     private val api: SourceSplashApi
 ) : ImageProvider {
     override val name: String = "SourceSplash"
-    override suspend fun fetchImage(query: String): Result<AtmosImage> = try {
+    override suspend fun fetchImage(query: String, location: String?): Result<AtmosImage> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query,$location" else query
         // source.unsplash.com redirects to a random image matching terms
-        val url = "https://source.unsplash.com/featured/1920x1080/?$query"
+        val url = "https://source.unsplash.com/featured/1920x1080/?$finalQuery"
         val response = api.getRandomImage(url)
         val finalUrl = response.raw().request.url.toString()
         
@@ -119,7 +109,8 @@ class SourceSplashImageProvider @Inject constructor(
             url = finalUrl,
             blurHash = null,
             attribution = "SourceSplash (Unsplash Random)",
-            metadata = mapOf("type" to "sourcesplash", "query" to query)
+            title = finalQuery,
+            metadata = mapOf("type" to "sourcesplash")
         ))
     } catch (e: Exception) {
         Result.failure(e)

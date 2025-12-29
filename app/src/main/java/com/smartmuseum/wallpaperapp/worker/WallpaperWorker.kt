@@ -7,11 +7,13 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.domain.location.LocationTracker
+import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.domain.usecase.GetAtmosImageUseCase
 import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 
 @HiltWorker
 class WallpaperWorker @AssistedInject constructor(
@@ -21,7 +23,7 @@ class WallpaperWorker @AssistedInject constructor(
     private val updateWallpaperUseCase: UpdateWallpaperUseCase,
     private val locationTracker: LocationTracker,
     private val userPreferencesRepository: UserPreferencesRepository,
-    private val flickrImageProvider: com.smartmuseum.wallpaperapp.data.repository.FlickrImageProvider
+    private val calendarRepository: CalendarRepository,
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -41,17 +43,22 @@ class WallpaperWorker @AssistedInject constructor(
         }
 
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_weather)))
-        val useLocation = kotlinx.coroutines.flow.first(userPreferencesRepository.useLocation)
-        val atmosImageResult = if (useLocation) {
-            flickrImageProvider.fetchImage("${lastKnownLocation.first},${lastKnownLocation.second}")
-        } else {
+        val atmosImageResult =
             getAtmosImageUseCase(lastKnownLocation.first, lastKnownLocation.second)
-        }
         
         return atmosImageResult.fold(
             onSuccess = { atmosImage ->
                 setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_wallpaper)))
-                val success = updateWallpaperUseCase(atmosImage)
+
+                // Fetch calendar events if enabled
+                val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
+                val events = if (isCalendarEnabled) {
+                    calendarRepository.getTodaysEvents()
+                } else null
+
+                val finalAtmosImage = atmosImage.copy(calendarEvents = events)
+
+                val success = updateWallpaperUseCase(finalAtmosImage)
                 if (success) {
                     setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_completed)))
                     Result.success()
