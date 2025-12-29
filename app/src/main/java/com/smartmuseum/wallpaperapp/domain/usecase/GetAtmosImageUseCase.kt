@@ -115,7 +115,7 @@ class GetAtmosImageUseCase @Inject constructor(
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
         // Simple moon phase approximation
-        var jd = if (month < 3) {
+        val jd = if (month < 3) {
             val y = year - 1
             val m = month + 12
             (365.25 * y).toInt() + (30.6001 * (m + 1)).toInt() + day + 1720995
@@ -145,7 +145,7 @@ class GetAtmosImageUseCase @Inject constructor(
             addresses?.firstOrNull()?.let { address ->
                 address.locality ?: address.subAdminArea ?: address.adminArea
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }

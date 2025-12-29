@@ -164,7 +164,6 @@ class MainActivity : ComponentActivity() {
                                     SetupTab(
                                         uiState = uiState,
                                         viewModel = viewModel,
-                                        debugWeatherCode = debugWeatherCode,
                                         onDebugWeatherChange = { debugWeatherCode = it },
                                         debugTemp = debugTemp,
                                         onDebugTempChange = { debugTemp = it },
@@ -229,7 +228,6 @@ class MainActivity : ComponentActivity() {
 fun SetupTab(
     uiState: MainUiState,
     viewModel: MainViewModel,
-    debugWeatherCode: Int?,
     onDebugWeatherChange: (Int?) -> Unit,
     debugTemp: Double,
     onDebugTempChange: (Double) -> Unit,
