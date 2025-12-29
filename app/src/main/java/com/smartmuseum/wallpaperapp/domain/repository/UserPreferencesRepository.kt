@@ -14,4 +14,11 @@ interface UserPreferencesRepository {
 
     val preferredImageProvider: Flow<String>
     suspend fun setPreferredImageProvider(provider: String)
+
+    val isCalendarEnabled: Flow<Boolean>
+    suspend fun setCalendarEnabled(enabled: Boolean)
+
+    val useLocation: Flow<Boolean>
+    suspend fun setUseLocation(useLocation: Boolean)
+
 }

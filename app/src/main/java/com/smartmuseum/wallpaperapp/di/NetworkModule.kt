@@ -1,6 +1,11 @@
 package com.smartmuseum.wallpaperapp.di
 
-import com.smartmuseum.wallpaperapp.data.remote.*
+import com.smartmuseum.wallpaperapp.data.remote.NasaApi
+import com.smartmuseum.wallpaperapp.data.remote.PexelsApi
+import com.smartmuseum.wallpaperapp.data.remote.PixabayApi
+import com.smartmuseum.wallpaperapp.data.remote.SourceSplashApi
+import com.smartmuseum.wallpaperapp.data.remote.UnsplashApi
+import com.smartmuseum.wallpaperapp.data.remote.WeatherApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

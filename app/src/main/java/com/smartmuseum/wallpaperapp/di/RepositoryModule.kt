@@ -1,7 +1,9 @@
 package com.smartmuseum.wallpaperapp.di
 
+import com.smartmuseum.wallpaperapp.data.repository.AndroidCalendarRepository
 import com.smartmuseum.wallpaperapp.data.repository.DataStoreUserPreferencesRepository
 import com.smartmuseum.wallpaperapp.data.repository.WallpaperRepositoryImpl
+import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
 import dagger.Binds
@@ -25,4 +27,10 @@ abstract class RepositoryModule {
     abstract fun bindWallpaperRepository(
         impl: WallpaperRepositoryImpl
     ): WallpaperRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCalendarRepository(
+        impl: AndroidCalendarRepository
+    ): CalendarRepository
 }

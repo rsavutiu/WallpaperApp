@@ -39,8 +39,7 @@ class WallpaperRepositoryImpl @Inject constructor(
 
     override suspend fun getPixabayPhoto(query: String): Result<PixabayResponse> {
         return try {
-            // Note: Use actual API key from BuildConfig if available
-            Result.success(pixabayApi.searchImages("48031231-6ecdb06000600cfdfcbbe06cf", query))
+            Result.success(pixabayApi.searchImages(BuildConfig.PIXABAY_API_KEY, query))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -48,7 +47,7 @@ class WallpaperRepositoryImpl @Inject constructor(
 
     override suspend fun getPexelsPhoto(query: String): Result<PexelsResponse> {
         return try {
-            Result.success(pexelsApi.searchImages("563492ad6f91700001000001c6f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0", query))
+            Result.success(pexelsApi.searchImages(BuildConfig.PEXELS_API_KEY, query))
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -32,4 +32,11 @@
     <string name="condition_unknown">Unbekannt</string>
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
+
+    <string name="tab_setup">Einrichtung</string>
+    <string name="tab_calendar">Kalender</string>
+    <string name="enable_calendar">Kalendersynchronisierung aktivieren</string>
+    <string name="calendar_permission_required">Die Kalenderberechtigung ist erforderlich, um Termine auf Ihrem Hintergrundbild anzuzeigen.</string>
+    <string name="no_events_today">Keine Termine heute</string>
+    <string name="use_location_wallpapers">Standort für Hintergrundbilder verwenden</string>
 </resources>

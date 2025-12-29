@@ -11,9 +11,13 @@ import com.smartmuseum.wallpaperapp.data.repository.UnsplashImageProvider
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.model.HourlyForecast
 import com.smartmuseum.wallpaperapp.domain.model.WeatherData
-import com.smartmuseum.wallpaperapp.domain.repository.*
+import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
+import com.smartmuseum.wallpaperapp.domain.repository.ImageProvider
+import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
+import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 
@@ -25,18 +29,19 @@ class GetAtmosImageUseCase @Inject constructor(
     private val pixabayProvider: PixabayImageProvider,
     private val pexelsProvider: PexelsImageProvider,
     private val sourceSplashProvider: SourceSplashImageProvider,
+    private val calendarRepository: CalendarRepository,
     @ApplicationContext private val context: Context
 ) {
     suspend operator fun invoke(lat: Double, lon: Double): Result<AtmosImage> {
         return try {
             val weather = wallpaperRepository.getWeather(lat, lon).getOrThrow()
             val current = weather.current
-
+            val isDay = current.is_day == 1
             val weatherData = WeatherData(
                 currentTemp = current.temperature_2m,
                 condition = getWeatherCondition(current.weather_code),
                 weatherCode = current.weather_code,
-                isDay = current.is_day == 1,
+                isDay = isDay,
                 humidity = current.relative_humidity_2m,
                 precipitation = current.precipitation,
                 hourlyForecast = weather.hourly.time.mapIndexed { index, time ->
@@ -46,40 +51,90 @@ class GetAtmosImageUseCase @Inject constructor(
                         precipitationProb = weather.hourly.precipitation_probability[index],
                         weatherCode = weather.hourly.weather_code[index]
                     )
-                }.take(8)
+                }.take(12)
             )
 
-            val locationName = getCityName(lat, lon)
-            val preferredProviderName = userPreferencesRepository.preferredImageProvider.first()
+            val useLocation: Boolean = userPreferencesRepository.useLocation.first()
+            val locationName: String? = getCityName(lat, lon)
+            val preferredProviderName: String =
+                userPreferencesRepository.preferredImageProvider.first()
+            val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
 
-            val provider: ImageProvider = when {
-                current.is_day == 0 -> nasaProvider // Still use NASA for night
-                else -> when (preferredProviderName) {
+            // Always use NASA at night
+            val provider: ImageProvider = if (!isDay) nasaProvider else
+                when (preferredProviderName) {
                     "Pixabay" -> pixabayProvider
                     "Pexels" -> pexelsProvider
                     "NASA" -> nasaProvider
                     "SourceSplash" -> sourceSplashProvider
                     else -> unsplashProvider
                 }
+
+            val query = if (!isDay) {
+                // If it's night and not too cloudy, search for the current moon phase
+                if (current.cloud_cover < 30) {
+                    getMoonPhaseQuery()
+                } else {
+                    "night sky stars nebula"
+                }
+            } else {
+                when {
+                    current.snowfall > 0 -> context.getString(R.string.query_snowy)
+                    current.rain > 0 || current.showers > 0 -> context.getString(R.string.query_rainy)
+                    current.cloud_cover > 70 -> context.getString(R.string.query_overcast)
+                    else -> context.getString(R.string.query_sunny)
+                }
             }
 
-            val query = when {
-                current.snowfall > 0 -> context.getString(R.string.query_snowy)
-                current.rain > 0 || current.showers > 0 -> context.getString(R.string.query_rainy)
-                current.cloud_cover > 70 -> context.getString(R.string.query_overcast)
-                else -> context.getString(R.string.query_sunny)
-            }
+            // If user enabled "Use Location for Wallpapers", we use the city name to narrow down the search
+            val locationQuery: String? = if (useLocation && isDay) locationName else null
 
-            val atmosImage = provider.fetchImage(query).getOrThrow()
-            
+            val atmosImageResult = provider.fetchImage(query = query, location = locationQuery)
+            val atmosImage = atmosImageResult.getOrThrow()
+
+            val events = if (isCalendarEnabled) {
+                calendarRepository.getTodaysEvents()
+            } else null
+
             Result.success(
                 atmosImage.copy(
                     locationName = locationName,
-                    weather = weatherData
+                    weather = weatherData,
+                    calendarEvents = events
                 )
             )
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private fun getMoonPhaseQuery(): String {
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH) + 1
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        // Simple moon phase approximation
+        val jd = if (month < 3) {
+            val y = year - 1
+            val m = month + 12
+            (365.25 * y).toInt() + (30.6001 * (m + 1)).toInt() + day + 1720995
+        } else {
+            (365.25 * year).toInt() + (30.6001 * (month + 1)).toInt() + day + 1720995
+        }
+        val b = (jd - 2451545) / 29.53.toInt()
+        val phase = (jd - 2451545) - (b * 29.53)
+
+        return when {
+            phase < 1.84 -> "new moon"
+            phase < 5.53 -> "waxing crescent moon"
+            phase < 9.22 -> "first quarter moon"
+            phase < 12.91 -> "waxing gibbous moon"
+            phase < 16.61 -> "full moon"
+            phase < 20.30 -> "waning gibbous moon"
+            phase < 23.99 -> "last quarter moon"
+            phase < 27.68 -> "waning crescent moon"
+            else -> "new moon"
         }
     }
 
@@ -90,7 +145,7 @@ class GetAtmosImageUseCase @Inject constructor(
             addresses?.firstOrNull()?.let { address ->
                 address.locality ?: address.subAdminArea ?: address.adminArea
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
