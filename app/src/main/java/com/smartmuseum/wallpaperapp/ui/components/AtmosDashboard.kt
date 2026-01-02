@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -133,32 +132,24 @@ private fun DashboardContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(if (onToggleUnit != null) 24.dp else 48.dp)
+            .padding(horizontal = 32.dp, vertical = 64.dp),
+        verticalArrangement = Arrangement.Center
     ) {
-        // Agenda Section (Left/Top-focused)
-        Box(modifier = Modifier
-            .weight(0.4f)
-            .fillMaxWidth()) {
-            if (isCalendarEnabled) {
-                AgendaList(events = atmosImage?.calendarEvents)
-            }
+        // Agenda Section
+        if (isCalendarEnabled && !atmosImage?.calendarEvents.isNullOrEmpty()) {
+            AgendaList(events = atmosImage?.calendarEvents)
+            Spacer(modifier = Modifier.height(32.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Environmental Info Section (Bottom-focused)
-        Box(modifier = Modifier
-            .weight(0.6f)
-            .fillMaxWidth()) {
-            atmosImage?.let { atmos ->
-                EnvironmentalDetails(
-                    atmos = atmos,
-                    isCelsius = isCelsius,
-                    onToggleUnit = onToggleUnit,
-                    forceTemp = forceTemp,
-                    forceWeatherCode = forceWeatherCode
-                )
-            }
+        // Environmental Info Section
+        atmosImage?.let { atmos ->
+            EnvironmentalDetails(
+                atmos = atmos,
+                isCelsius = isCelsius,
+                onToggleUnit = onToggleUnit,
+                forceTemp = forceTemp,
+                forceWeatherCode = forceWeatherCode
+            )
         }
     }
 }
@@ -175,8 +166,11 @@ private fun AgendaList(events: List<CalendarEvent>?) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(events.take(5)) { event ->
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(0.8f)
+        ) {
+            items(events.take(3)) { event ->
                 CalendarEventItem(event)
             }
         }
@@ -191,7 +185,7 @@ private fun EnvironmentalDetails(
     forceTemp: Double?,
     forceWeatherCode: Int?
 ) {
-    Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
+    Column {
         atmos.weather?.let { weather ->
             // Location Header
             LocationHeader(atmos.locationName)
@@ -226,7 +220,7 @@ private fun EnvironmentalDetails(
             // Forecast Strip
             ForecastStrip(forecasts = weather.hourlyForecast, isCelsius = isCelsius)
 
-            // Image Provider Insights (Removed hardcoded metadata keys)
+            // Image Provider Insights
             ImageInsights(title = atmos.title, explanation = atmos.explanation)
         }
     }
@@ -351,10 +345,12 @@ private fun ImageInsights(title: String?, explanation: String?) {
     )
     explanation?.let { text ->
         Text(
-            text = if (text.length > 120) text.take(120) + "..." else text,
+            text = text,
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 11.sp,
-            lineHeight = 14.sp
+            lineHeight = 14.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

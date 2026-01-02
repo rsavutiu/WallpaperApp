@@ -25,6 +25,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
 ) : UserPreferencesRepository {
 
     private object PreferencesKeys {
+        val REFRESH_PERIOD = longPreferencesKey("refresh_period")
         val IS_CELSIUS = booleanPreferencesKey("is_celsius")
         val LAST_UPDATE = longPreferencesKey("last_update")
         val LONGITUDE = doublePreferencesKey("longitude")
@@ -96,6 +97,16 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     override suspend fun setUseLocation(useLocation: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.USE_LOCATION] = useLocation
+        }
+    }
+
+    override val refreshPeriodInMinutes: Flow<Long> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.REFRESH_PERIOD] ?: 60L
+    }
+
+    override suspend fun setRefreshPeriod(minutes: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.REFRESH_PERIOD] = minutes
         }
     }
 }

@@ -30,7 +30,7 @@ class GetAtmosImageUseCase @Inject constructor(
     private val pexelsProvider: PexelsImageProvider,
     private val sourceSplashProvider: SourceSplashImageProvider,
     private val calendarRepository: CalendarRepository,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) {
     suspend operator fun invoke(lat: Double, lon: Double): Result<AtmosImage> {
         return try {

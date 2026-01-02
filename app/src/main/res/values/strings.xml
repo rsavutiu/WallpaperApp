@@ -46,9 +46,14 @@
 
     <string name="tab_setup">Setup</string>
     <string name="tab_calendar">Calendar</string>
+    <string name="tab_wallpaper">Wallpaper</string>
     <string name="enable_calendar">Enable Calendar Sync</string>
     <string name="calendar_permission_required">Calendar permission is required to show events on your wallpaper.</string>
     <string name="no_events_today">No events today</string>
     <string name="use_location_wallpapers">Use location for wallpapers</string>
     <string name="todays_schedule">Today\'s schedule</string>
+    <string name="refresh_period">Refresh period</string>
+    <string name="hours">%1$d hours</string>
+    <string name="minutes">%1$d minutes</string>
+    <string name="atmos_wallpaper_updates">Atmos Wallpaper Updates</string>
 </resources>

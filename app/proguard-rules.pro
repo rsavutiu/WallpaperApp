@@ -1,21 +1,47 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# --- General Android ---
+-keepattributes SourceFile,LineNumberTable
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes InnerClasses,EnclosingMethod
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- Jetpack Compose ---
+-keep class androidx.compose.ui.platform.** { *; }
+-keep class androidx.compose.runtime.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# --- Hilt / Dagger ---
+-keep class dagger.hilt.android.internal.managers.** { *; }
+-keep class * extends dager.hilt.android.internal.managers.**
+-keep @dagger.hilt.android.AndroidEntryPoint class *
+-keep @dagger.hilt.EntryPoint class *
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# --- Gson ---
+# Keep model classes used for JSON serialization
+-keep class com.smartmuseum.wallpaperapp.domain.model.** { *; }
+-keep class com.google.gson.reflect.TypeToken
+-keep class * extends com.google.gson.TypeAdapter
+-keep class com.google.gson.stream.JsonReader
+-keep class com.google.gson.stream.JsonWriter
+
+# --- Retrofit ---
+-keepattributes RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers interface retrofit2.** { *; }
+-dontwarn retrofit2.**
+-keep class okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# --- Coil ---
+-keep class io.coilkt.coil.** { *; }
+-dontwarn io.coilkt.coil.**
+
+# --- WorkManager ---
+-keep class androidx.work.** { *; }
+-dontwarn androidx.work.**
+
+# --- App Specific ---
+# Keep the Wallpaper and Dream services
+-keep class com.smartmuseum.wallpaperapp.ui.dream.AtmosDreamService { *; }
+
+# Keep the Application class
+-keep class com.smartmuseum.wallpaperapp.AtmosApplication { *; }

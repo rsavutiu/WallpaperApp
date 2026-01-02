@@ -12,6 +12,15 @@ interface UnsplashApi {
         @Query("content_filter") contentFilter: String = "high"
     ): UnsplashPhotoResponse
 
+    @GET("photos/random")
+    suspend fun getRandomPhotos(
+        @Query("query") query: String,
+        @Query("client_id") clientId: String,
+        @Query("count") count: Int = 15,
+        @Query("orientation") orientation: String = "landscape",
+        @Query("content_filter") contentFilter: String = "high"
+    ): List<UnsplashPhotoResponse>
+
     companion object {
         const val BASE_URL = "https://api.unsplash.com/"
     }

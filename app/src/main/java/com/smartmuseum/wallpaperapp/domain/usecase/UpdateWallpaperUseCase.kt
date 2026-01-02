@@ -3,15 +3,19 @@ package com.smartmuseum.wallpaperapp.domain.usecase
 import android.app.WallpaperManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 import androidx.palette.graphics.Palette
 import coil.ImageLoader
 import coil.request.ImageRequest
@@ -24,36 +28,62 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
 class UpdateWallpaperUseCase @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
-    suspend operator fun invoke(atmosImage: AtmosImage): Boolean = withContext(Dispatchers.IO) {
+    /**
+     * Updates the system wallpaper.
+     * @param atmosImage Metadata for the wallpaper.
+     * @param useCache If true, attempts to use the locally saved 'atmos_raw.png' instead of downloading.
+     */
+    suspend operator fun invoke(atmosImage: AtmosImage, useCache: Boolean = false): Boolean =
+        withContext(Dispatchers.IO) {
         val loader = ImageLoader(context)
-        val request = ImageRequest.Builder(context)
-            .data(atmosImage.url)
-            .allowHardware(false)
-            .build()
 
-        val result = loader.execute(request)
-        if (result is SuccessResult) {
-            val originalBitmap = (result.drawable as? BitmapDrawable)?.bitmap
+            // 1. Get the original bitmap (from cache or network)
+            val bitmapToProcess = if (useCache) {
+                val rawFile = File(context.filesDir, "atmos_raw.png")
+                if (rawFile.exists()) {
+                    try {
+                        BitmapFactory.decodeFile(rawFile.absolutePath)
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else null
+            } else null
+
+            val originalBitmap = bitmapToProcess ?: run {
+                val request = ImageRequest.Builder(context)
+                    .data(atmosImage.url)
+                    .allowHardware(false)
+                    .build()
+
+                val result = loader.execute(request)
+                if (result is SuccessResult) {
+                    val downloaded = (result.drawable as? BitmapDrawable)?.bitmap
+                    if (downloaded != null) {
+                        // Save the CLEAN original image if we just downloaded it
+                        saveBitmapLocally(downloaded, "atmos_raw.png")
+                    }
+                    downloaded
+                } else null
+            }
+
             if (originalBitmap != null) {
-                // 1. Save the CLEAN original image
-                saveBitmapLocally(originalBitmap, "atmos_raw.png")
-
                 // 2. Extract Palette colors for "burnt-in" info
                 val palette = Palette.from(originalBitmap).generate()
                 val accentColor = palette.getLightVibrantColor(Color.WHITE)
 
                 // 3. Create a copy for the system wallpaper
                 val processedBitmap = originalBitmap.copy(Bitmap.Config.ARGB_8888, true)
-                
+
                 val isCelsius = userPreferencesRepository.isCelsius.first()
                 val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
 
@@ -69,20 +99,20 @@ class UpdateWallpaperUseCase @Inject constructor(
                 return@withContext try {
                     val wallpaperManager = WallpaperManager.getInstance(context)
                     wallpaperManager.setBitmap(processedBitmap)
-                    
+
                     saveBitmapLocally(processedBitmap, "atmos_wallpaper.png")
                     saveMetadataLocally(atmosImage)
-                    
+
                     userPreferencesRepository.updateLastUpdateTimestamp()
-                    
+
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, R.string.wallpaper_updated, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.wallpaper_updated, Toast.LENGTH_SHORT)
+                            .show()
                     }
-                    
+
                     true
                 } catch (_: Exception) {
                     false
-                }
             }
         }
         false
@@ -109,45 +139,38 @@ class UpdateWallpaperUseCase @Inject constructor(
             color = accentColor
         }
 
-        // 1. Draw Calendar Events (Left Side) - ONLY IF ENABLED
-        if (isCalendarEnabled) {
-            atmosImage.calendarEvents?.let { events ->
-                if (events.isNotEmpty()) {
-                    val calendarPaint = Paint(textPaint).apply {
-                        textSize = bitmap.height / 50f
-                    }
-                    val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-                    var calendarY = bitmap.height * 0.2f
-                    val calendarX = bitmap.width * 0.05f
-
-                    canvas.drawText(
-                        context.getString(R.string.todays_schedule),
-                        calendarX,
-                        calendarY,
-                        accentPaint.apply { textSize = bitmap.height / 45f })
-                    calendarY += calendarPaint.textSize * 2.0f
-
-                    events.take(5).forEach { event ->
-                        val timeStr =
-                            if (event.isAllDay) "All Day" else timeFormatter.format(Date(event.startTime))
-                        val eventText = "$timeStr: ${event.title}"
-
-                        canvas.drawText(
-                            if (eventText.length > 30) eventText.take(27) + "..." else eventText,
-                            calendarX,
-                            calendarY,
-                            calendarPaint.apply { typeface = Typeface.DEFAULT }
-                        )
-                        calendarY += calendarPaint.textSize * 1.5f
-                    }
-                }
-            }
+        val scrimPaint = Paint().apply {
+            color = Color.BLACK
+            alpha = 140 // Increased opacity for better legibility as requested
+            style = Paint.Style.FILL
         }
 
-        // 2. Draw Weather & Metadata (Mid to Bottom Area)
-        var currentY = bitmap.height * 0.5f
-        val rightSideX = bitmap.width * 0.45f
+        // 1. Draw Weather & Location Info (Top Area)
+        var currentY = bitmap.height * 0.15f
+        val leftMarginX = bitmap.width * 0.10f
 
+        // Draw Location Name first
+        atmosImage.locationName?.let { city ->
+            textPaint.textSize = bitmap.height / 50f
+            textPaint.color = accentColor
+            textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+
+            // Draw scrim for location
+            val textWidth = textPaint.measureText(city)
+            val rect = RectF(
+                leftMarginX - 15f,
+                currentY - textPaint.textSize - 5f,
+                leftMarginX + textWidth + 15f,
+                currentY + 10f
+            )
+            canvas.drawRoundRect(rect, 12f, 12f, scrimPaint)
+
+            canvas.drawText(city, leftMarginX, currentY, textPaint)
+            currentY += textPaint.textSize * 1.8f + 60
+            textPaint.color = Color.WHITE
+        }
+
+        // Draw Weather Info
         atmosImage.weather?.let { weather ->
             val tempValue =
                 if (isCelsius) weather.currentTemp else (weather.currentTemp * 9 / 5) + 32
@@ -159,91 +182,179 @@ class UpdateWallpaperUseCase @Inject constructor(
             val iconBitmap = drawableToBitmap(iconRes)
             if (iconBitmap != null) {
                 val iconSize = (bitmap.height / 15f).toInt()
-                val scaledIcon = Bitmap.createScaledBitmap(iconBitmap, iconSize, iconSize, true)
+                val scaledIcon = iconBitmap.scale(iconSize, iconSize)
                 val tintedIcon = tintBitmap(scaledIcon, accentColor)
-                canvas.drawBitmap(tintedIcon, rightSideX, currentY - iconSize, null)
+
+                // Draw scrim for icon
+                canvas.drawRoundRect(
+                    RectF(
+                        leftMarginX - 10f,
+                        currentY - iconSize - 10f,
+                        leftMarginX + iconSize + 10f,
+                        currentY + 10f
+                    ), 12f, 12f, scrimPaint
+                )
+
+                canvas.drawBitmap(tintedIcon, leftMarginX, currentY - iconSize, null)
             }
 
             // Temperature
             textPaint.textSize = bitmap.height / 20f
-            canvas.drawText(tempText, rightSideX + (bitmap.height / 10f), currentY, textPaint)
+            val tempWidth = textPaint.measureText(tempText)
+            val tempX = leftMarginX + (bitmap.height / 10f)
+            canvas.drawRoundRect(
+                RectF(
+                    tempX - 15f,
+                    currentY - textPaint.textSize - 5f,
+                    tempX + tempWidth + 15f,
+                    currentY + 10f
+                ), 12f, 12f, scrimPaint
+            )
+            canvas.drawText(tempText, tempX, currentY, textPaint)
 
             // Condition
             textPaint.textSize = bitmap.height / 45f
             textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-            currentY += textPaint.textSize * 1.5f
-            canvas.drawText(weather.condition, rightSideX, currentY, textPaint)
+            currentY += textPaint.textSize * 1.5f + 20
+            val condWidth = textPaint.measureText(weather.condition)
+            canvas.drawRoundRect(
+                RectF(
+                    leftMarginX - 15f,
+                    currentY - textPaint.textSize - 5f,
+                    leftMarginX + condWidth + 15f,
+                    currentY + 10f
+                ), 12f, 12f, scrimPaint
+            )
+            canvas.drawText(weather.condition, leftMarginX, currentY, textPaint)
 
             // Hourly Forecast
             if (weather.hourlyForecast.isNotEmpty()) {
-                currentY += textPaint.textSize * 2.0f
+                val hourlyData = weather.hourlyForecast.take(FORECAST_HOURS)
+
                 val hourlyPaint = Paint(textPaint).apply {
                     textSize = bitmap.height / 60f
                     typeface = Typeface.DEFAULT
+                    alpha = 255
+                    setShadowLayer(10f, 0f, 0f, Color.BLACK)
+                    textAlign = Paint.Align.CENTER
                 }
 
-                var forecastX = rightSideX
-                weather.hourlyForecast.take(5).forEach { forecast ->
-                    val hTemp = if (isCelsius) forecast.temp else (forecast.temp * 9 / 5) + 32
-                    val hTime = forecast.time.takeLast(5)
+                val hIconSize = (bitmap.height / 30f).toInt()
+                val lineSpacing = hourlyPaint.textSize * 0.5f
 
-                    // Small icon for each hour
+                val columnCount = hourlyData.size
+                val totalForecastWidth = bitmap.width * 0.85f
+                val columnWidth = totalForecastWidth / columnCount
+                val startX = leftMarginX
+
+                val textBounds = android.graphics.Rect()
+                hourlyPaint.getTextBounds("00:00", 0, 5, textBounds)
+                val timeHeight = textBounds.height().toFloat()
+
+                hourlyPaint.getTextBounds("00°", 0, 3, textBounds)
+                val tempHeight = textBounds.height().toFloat()
+
+                currentY += hourlyPaint.textSize * 2.5f
+                val timeBaselineY = currentY + timeHeight
+                val iconTopY = timeBaselineY + lineSpacing
+                val tempBaselineY = iconTopY + hIconSize + lineSpacing + tempHeight
+
+                hourlyData.forEachIndexed { index, forecast ->
+                    val centerX = startX + (index * columnWidth) + (columnWidth / 2f)
+
+                    // Draw individual scrim for this forecast item as requested
+                    val itemRect = RectF(
+                        centerX - (columnWidth * 0.48f),
+                        currentY - 15f,
+                        centerX + (columnWidth * 0.48f),
+                        tempBaselineY + 20f
+                    )
+                    canvas.drawRoundRect(itemRect, 12f, 12f, scrimPaint)
+
+                    // A. Draw Time
+                    val hTime = forecast.time.takeLast(5)
+                    hourlyPaint.alpha = 180
+                    canvas.drawText(hTime, centerX, timeBaselineY, hourlyPaint)
+
+                    // B. Draw Icon
                     val hIconRes = getWeatherIconRes(forecast.weatherCode, true)
                     drawableToBitmap(hIconRes)?.let { hIcon ->
-                        val hIconSize = (bitmap.height / 45f).toInt()
-                        val sHIcon = Bitmap.createScaledBitmap(hIcon, hIconSize, hIconSize, true)
-                        canvas.drawBitmap(sHIcon, forecastX, currentY, null)
+                        val scaledIcon = hIcon.scale(hIconSize, hIconSize)
+                        canvas.drawBitmap(
+                            scaledIcon,
+                            centerX - (hIconSize / 2f),
+                            iconTopY,
+                            null
+                        )
                     }
 
-                    canvas.drawText(
-                        "${hTemp.toInt()}°",
-                        forecastX,
-                        currentY + (bitmap.height / 25f),
-                        hourlyPaint
-                    )
-                    canvas.drawText(
-                        hTime,
-                        forecastX,
-                        currentY + (bitmap.height / 18f),
-                        hourlyPaint.apply { alpha = 180 })
-
-                    forecastX += bitmap.width / 12f
+                    // C. Draw Temperature
+                    val hTemp = if (isCelsius) forecast.temp else (forecast.temp * 9 / 5) + 32
+                    val hTempStr = "${hTemp.toInt()}°"
+                    hourlyPaint.alpha = 255
+                    canvas.drawText(hTempStr, centerX, tempBaselineY, hourlyPaint)
                 }
-                currentY += bitmap.height / 10f
-            }
 
-            // City Name (Accent Color)
-            atmosImage.locationName?.let { city ->
-                textPaint.textSize = bitmap.height / 50f
-                textPaint.color = accentColor
-                textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                currentY += textPaint.textSize * 1.8f
-                canvas.drawText(city, rightSideX, currentY, textPaint)
-                textPaint.color = Color.WHITE
+                currentY = tempBaselineY + hourlyPaint.textSize * 2f
             }
         }
 
-        // Image Details (Removed hardcoded keys)
-        atmosImage.title?.let { title ->
-            textPaint.textSize = bitmap.height / 50f
-            textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            currentY += textPaint.textSize * 2.0f
-            canvas.drawText(title, rightSideX, currentY, textPaint)
-        }
+        // 2. Draw Calendar Events
+        if (isCalendarEnabled) {
+            atmosImage.calendarEvents?.let { events ->
+                if (events.isNotEmpty()) {
+                    val calendarPaint = Paint(textPaint).apply {
+                        textSize = bitmap.height / 50f
+                        textAlign = Paint.Align.LEFT
+                    }
+                    val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+                    var calendarY = bitmap.height * 0.05f
+                    val calendarX = bitmap.width * 0.05f
 
-        // Attribution
-        val attribution = atmosImage.attribution
-        textPaint.textSize = bitmap.height / 65f
-        textPaint.alpha = 200
-        textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
-        currentY += textPaint.textSize * 2.0f
-        canvas.drawText(attribution, rightSideX, currentY, textPaint)
+                    val scheduleText = context.getString(R.string.todays_schedule)
+                    val sWidth = accentPaint.apply { textSize = bitmap.height / 45f }
+                        .measureText(scheduleText)
+                    canvas.drawRoundRect(
+                        RectF(
+                            calendarX - 10f,
+                            calendarY - (bitmap.height / 45f) - 5f,
+                            calendarX + sWidth + 10f,
+                            calendarY + 15f
+                        ), 12f, 12f, scrimPaint
+                    )
+                    canvas.drawText(scheduleText, calendarX, calendarY, accentPaint)
+                    calendarY += calendarPaint.textSize * 2.0f
+
+                    events.take(5).forEach { event ->
+                        val timeStr =
+                            if (event.isAllDay) "All Day" else timeFormatter.format(Date(event.startTime))
+                        val eventText = "$timeStr: ${event.title}"
+                        val displayEventText =
+                            if (eventText.length > 30) eventText.take(27) + "..." else eventText
+
+                        val eWidth = calendarPaint.apply { typeface = Typeface.DEFAULT }
+                            .measureText(displayEventText)
+                        canvas.drawRoundRect(
+                            RectF(
+                                calendarX - 10f,
+                                calendarY - calendarPaint.textSize - 5f,
+                                calendarX + eWidth + 10f,
+                                calendarY + 10f
+                            ), 12f, 12f, scrimPaint
+                        )
+
+                        canvas.drawText(displayEventText, calendarX, calendarY, calendarPaint)
+                        calendarY += calendarPaint.textSize * 1.5f
+                    }
+                }
+            }
+        }
     }
 
     private fun tintBitmap(bitmap: Bitmap, color: Int): Bitmap {
         val paint = Paint()
         paint.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN)
-        val bitmapResult = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        val bitmapResult = createBitmap(bitmap.width, bitmap.height)
         val canvas = Canvas(bitmapResult)
         canvas.drawBitmap(bitmap, 0f, 0f, paint)
         return bitmapResult
@@ -274,10 +385,9 @@ class UpdateWallpaperUseCase @Inject constructor(
 
     private fun drawableToBitmap(resId: Int): Bitmap? {
         val drawable = ContextCompat.getDrawable(context, resId) ?: return null
-        val bitmap = Bitmap.createBitmap(
+        val bitmap = createBitmap(
             drawable.intrinsicWidth.coerceAtLeast(1),
-            drawable.intrinsicHeight.coerceAtLeast(1),
-            Bitmap.Config.ARGB_8888
+            drawable.intrinsicHeight.coerceAtLeast(1)
         )
         val canvas = Canvas(bitmap)
         drawable.setBounds(0, 0, canvas.width, canvas.height)
@@ -296,5 +406,9 @@ class UpdateWallpaperUseCase @Inject constructor(
         context.openFileOutput("atmos_metadata.json", Context.MODE_PRIVATE).use {
             it.write(json.toByteArray())
         }
+    }
+
+    companion object {
+        private const val FORECAST_HOURS = 8
     }
 }

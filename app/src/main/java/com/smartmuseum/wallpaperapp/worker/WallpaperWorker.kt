@@ -1,8 +1,14 @@
 package com.smartmuseum.wallpaperapp.worker
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.ServiceInfo
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.smartmuseum.wallpaperapp.R
@@ -31,6 +37,8 @@ class WallpaperWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
+        setForeground(getForegroundInfo())
+
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_location)))
         val location = locationTracker.getCurrentLocation()
         val lastKnownLocation: Pair<Double, Double> = if (location != null) {
@@ -70,5 +78,34 @@ class WallpaperWorker @AssistedInject constructor(
                 Result.retry()
             }
         )
+    }
+
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        // Create the Notification Channel (Required for API 26+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "atmos_updates",
+                context.getString(R.string.atmos_wallpaper_updates),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val notificationManager =
+                applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(applicationContext, "atmos_updates")
+            .setContentTitle(applicationContext.getString(R.string.app_name))
+            .setContentText("Updating weather conditions...")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setOngoing(true)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .build()
+
+        // Pass the notification and the type declared in the Manifest
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ForegroundInfo(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            ForegroundInfo(1, notification)
+        }
     }
 }

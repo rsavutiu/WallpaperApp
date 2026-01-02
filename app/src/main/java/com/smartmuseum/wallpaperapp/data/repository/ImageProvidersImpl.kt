@@ -29,6 +29,28 @@ class UnsplashImageProvider @Inject constructor(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    override suspend fun fetchImages(
+        query: String,
+        location: String?,
+        count: Int
+    ): Result<List<AtmosImage>> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query $location" else query
+        val responses = api.getRandomPhotos(finalQuery, BuildConfig.UNSPLASH_ACCESS_KEY, count)
+        val images = responses.map { response ->
+            AtmosImage(
+                id = response.id,
+                url = response.urls.regular,
+                blurHash = response.blur_hash,
+                attribution = "Unsplash / ${response.user.name}",
+                title = response.description ?: response.alt_description,
+                metadata = mapOf("type" to "unsplash")
+            )
+        }
+        Result.success(images)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }
 
 class NasaImageProvider @Inject constructor(
@@ -46,6 +68,27 @@ class NasaImageProvider @Inject constructor(
             explanation = response.explanation,
             metadata = mapOf("type" to "nasa")
         ))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun fetchImages(
+        query: String,
+        location: String?,
+        count: Int
+    ): Result<List<AtmosImage>> = try {
+        // NASA APOD only returns one image per day, so we'll return a list with just that one
+        val response = api.getApod(BuildConfig.NASA_API_KEY)
+        val image = AtmosImage(
+            id = (response.date ?: "") + response.title + response.url,
+            url = response.hdurl ?: response.url,
+            blurHash = null,
+            attribution = response.copyright ?: "NASA/JPL",
+            title = response.title,
+            explanation = response.explanation,
+            metadata = mapOf("type" to "nasa")
+        )
+        Result.success(listOf(image))
     } catch (e: Exception) {
         Result.failure(e)
     }
@@ -70,6 +113,32 @@ class PixabayImageProvider @Inject constructor(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    override suspend fun fetchImages(
+        query: String,
+        location: String?,
+        count: Int
+    ): Result<List<AtmosImage>> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query $location" else query
+        val response = api.searchImages(
+            BuildConfig.PIXABAY_API_KEY,
+            finalQuery,
+            perPage = count.coerceIn(1, 20)
+        )
+        val images = response.hits.take(count).map { hit ->
+            AtmosImage(
+                id = hit.id.toString(),
+                url = hit.largeImageURL,
+                blurHash = null,
+                attribution = "Pixabay / ${hit.user}",
+                title = hit.tags,
+                metadata = mapOf("type" to "pixabay")
+            )
+        }
+        Result.success(images)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }
 
 class PexelsImageProvider @Inject constructor(
@@ -88,6 +157,32 @@ class PexelsImageProvider @Inject constructor(
             title = photo.alt,
             metadata = mapOf("type" to "pexels")
         ))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun fetchImages(
+        query: String,
+        location: String?,
+        count: Int
+    ): Result<List<AtmosImage>> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query $location" else query
+        val response = api.searchImages(
+            BuildConfig.PEXELS_API_KEY,
+            finalQuery,
+            perPage = count.coerceIn(1, 20)
+        )
+        val images = response.photos.take(count).map { photo ->
+            AtmosImage(
+                id = photo.id.toString(),
+                url = photo.src.large2x,
+                blurHash = null,
+                attribution = "Pexels / ${photo.photographer}",
+                title = photo.alt,
+                metadata = mapOf("type" to "pexels")
+            )
+        }
+        Result.success(images)
     } catch (e: Exception) {
         Result.failure(e)
     }
@@ -112,6 +207,38 @@ class SourceSplashImageProvider @Inject constructor(
             title = finalQuery,
             metadata = mapOf("type" to "sourcesplash")
         ))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun fetchImages(
+        query: String,
+        location: String?,
+        count: Int
+    ): Result<List<AtmosImage>> = try {
+        val finalQuery = if (!location.isNullOrBlank()) "$query,$location" else query
+        // SourceSplash doesn't support multiple images in one call, so we make multiple requests
+        val images = mutableListOf<AtmosImage>()
+        repeat(count.coerceIn(1, 20)) {
+            try {
+                val url = "https://source.unsplash.com/featured/1920x1080/?$finalQuery"
+                val response = api.getRandomImage(url)
+                val finalUrl = response.raw().request.url.toString()
+                images.add(
+                    AtmosImage(
+                        id = "${System.currentTimeMillis()}_$it",
+                        url = finalUrl,
+                        blurHash = null,
+                        attribution = "SourceSplash (Unsplash Random)",
+                        title = finalQuery,
+                        metadata = mapOf("type" to "sourcesplash")
+                    )
+                )
+            } catch (_: Exception) {
+                // Continue with other images if one fails
+            }
+        }
+        Result.success(images)
     } catch (e: Exception) {
         Result.failure(e)
     }

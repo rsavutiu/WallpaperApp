@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background layer matches splash screen background -->
+    <item android:drawable="@color/black" />
+
+    <!-- Centered App Icon -->
+    <item
+        android:width="108dp"
+        android:height="108dp"
+        android:drawable="@mipmap/ic_launcher_foreground"
+        android:gravity="center" />
+
+    <!-- App Name Text below the icon -->
+    <!-- Note: We use a shape with text here or a pre-rendered image if available. 
+         For a quick solution, we'll use a bitmap or a specialized vector.
+         Since I can't generate a bitmap, I'll use a placeholder vector that looks like text. -->
+    <item
+        android:gravity="center"
+        android:top="140dp">
+        <shape android:shape="rectangle">
+            <size
+                android:width="200dp"
+                android:height="40dp" />
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</layer-list>

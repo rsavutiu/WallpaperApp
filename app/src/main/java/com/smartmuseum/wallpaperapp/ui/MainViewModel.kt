@@ -10,13 +10,25 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.smartmuseum.wallpaperapp.AtmosApplication
 import com.smartmuseum.wallpaperapp.R
+import com.smartmuseum.wallpaperapp.data.repository.NasaImageProvider
+import com.smartmuseum.wallpaperapp.data.repository.PexelsImageProvider
+import com.smartmuseum.wallpaperapp.data.repository.PixabayImageProvider
+import com.smartmuseum.wallpaperapp.data.repository.SourceSplashImageProvider
+import com.smartmuseum.wallpaperapp.data.repository.UnsplashImageProvider
+import com.smartmuseum.wallpaperapp.domain.location.LocationTracker
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
+import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
+import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
+import com.smartmuseum.wallpaperapp.domain.usecase.GetAtmosImageUseCase
+import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -24,15 +36,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
+data class ProviderImages(
+    val providerName: String,
+    val images: List<AtmosImage>,
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
 
 data class MainUiState(
     val currentWallpaper: Bitmap? = null,
     val atmosImage: AtmosImage? = null,
     val workerProgress: String = "",
+    val rawWorkerProgress: String = "", // Added to track raw stage message
     val isWorkRunning: Boolean = false,
     val isCelsius: Boolean = true,
     val isLoading: Boolean = false,
@@ -41,14 +63,27 @@ data class MainUiState(
     val preferredProvider: String = "Unsplash",
     val useLocation: Boolean = false,
     val isCalendarEnabled: Boolean = false,
-    val customColorScheme: ColorScheme? = null
+    val customColorScheme: ColorScheme? = null,
+    val providerImages: List<ProviderImages> = emptyList(),
+    val isFetchingImages: Boolean = false,
+    val refreshPeriodInMinutes: Long = 30
 )
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val workManager: WorkManager,
     private val application: Application,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val unsplashProvider: UnsplashImageProvider,
+    private val nasaProvider: NasaImageProvider,
+    private val pixabayProvider: PixabayImageProvider,
+    private val pexelsProvider: PexelsImageProvider,
+    private val sourceSplashProvider: SourceSplashImageProvider,
+    private val getAtmosImageUseCase: GetAtmosImageUseCase,
+    private val updateWallpaperUseCase: UpdateWallpaperUseCase,
+    private val locationTracker: LocationTracker,
+    private val wallpaperRepository: WallpaperRepository,
+    private val calendarRepository: CalendarRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -59,6 +94,7 @@ class MainViewModel @Inject constructor(
         observeWork()
         observePreferences()
         observeUpdateSignal()
+        fetchAllProviderImages()
     }
 
     private fun observePreferences() {
@@ -82,6 +118,11 @@ class MainViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isCalendarEnabled = enabled)
             }
         }
+        viewModelScope.launch {
+            userPreferencesRepository.refreshPeriodInMinutes.collect { period ->
+                _uiState.value = _uiState.value.copy(refreshPeriodInMinutes = period)
+            }
+        }
     }
 
     private fun observeUpdateSignal() {
@@ -95,12 +136,34 @@ class MainViewModel @Inject constructor(
     fun toggleTemperatureUnit() {
         viewModelScope.launch {
             userPreferencesRepository.setCelsius(!_uiState.value.isCelsius)
+            reBurnCurrentWallpaper()
         }
     }
 
     fun setImageProvider(provider: String) {
         viewModelScope.launch {
             userPreferencesRepository.setPreferredImageProvider(provider)
+        }
+    }
+
+    fun updateRefreshPeriod(minutes: Long) {
+        viewModelScope.launch {
+            userPreferencesRepository.setRefreshPeriod(minutes)
+            triggerUpdate(immediate = false) // Reschedule with new period
+        }
+    }
+
+    fun triggerUpdate(immediate: Boolean = true) {
+        viewModelScope.launch {
+            val period = userPreferencesRepository.refreshPeriodInMinutes.first()
+            val workRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(period, TimeUnit.MINUTES)
+                .build()
+
+            workManager.enqueueUniquePeriodicWork(
+                AtmosApplication.WORK_MANAGER,
+                if (immediate) ExistingPeriodicWorkPolicy.REPLACE else ExistingPeriodicWorkPolicy.KEEP,
+                workRequest
+            )
         }
     }
 
@@ -189,19 +252,28 @@ class MainViewModel @Inject constructor(
                         val isRunning = workInfo.state == WorkInfo.State.RUNNING
                         val shouldShowLoading = isRunning
 
+                        // Prepend provider name to the progress message
+                        val currentProvider =
+                            userPreferencesRepository.preferredImageProvider.first()
+                        val displayProgress = if (progressMessage.isNotEmpty()) {
+                            "$currentProvider: $progressMessage"
+                        } else progressMessage
+
+                        // Mapping loadingProgress milestones:
                         val progressValue = when (progressMessage) {
-                            application.getString(R.string.stage_location) -> 0.25f
-                            application.getString(R.string.stage_weather) -> 0.50f
-                            application.getString(R.string.stage_wallpaper) -> 0.75f
+                            application.getString(R.string.stage_location) -> 0.0f
+                            application.getString(R.string.stage_weather) -> 0.33f
+                            application.getString(R.string.stage_wallpaper) -> 0.66f
                             application.getString(R.string.stage_completed) -> 1.0f
-                            else -> if (isRunning) 0.1f else 0f
+                            else -> if (isRunning) 0.05f else 0f
                         }
 
                         _uiState.value = _uiState.value.copy(
-                            workerProgress = progressMessage,
+                            workerProgress = displayProgress,
+                            rawWorkerProgress = progressMessage,
                             isLoading = shouldShowLoading,
-                            loadingMessage = if (progressMessage.isEmpty() && isRunning) 
-                                application.getString(R.string.initializing) else progressMessage,
+                            loadingMessage = if (displayProgress.isEmpty() && isRunning)
+                                "$currentProvider: ${application.getString(R.string.initializing)}" else displayProgress,
                             loadingProgress = progressValue,
                             isWorkRunning = isRunning
                         )
@@ -219,12 +291,214 @@ class MainViewModel @Inject constructor(
     fun setCalendarEnabled(bool: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.setCalendarEnabled(enabled = bool)
+            reBurnCurrentWallpaper()
         }
     }
 
     fun toggleUseLocation() {
         viewModelScope.launch {
             userPreferencesRepository.setUseLocation(!uiState.value.useLocation)
+            reBurnCurrentWallpaper()
+        }
+    }
+
+    private fun reBurnCurrentWallpaper() {
+        viewModelScope.launch {
+            val currentAtmosImage = _uiState.value.atmosImage ?: return@launch
+
+            // Get fresh calendar events if enabled
+            val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
+            val events = if (isCalendarEnabled) {
+                calendarRepository.getTodaysEvents()
+            } else null
+
+            val updatedImage = currentAtmosImage.copy(calendarEvents = events)
+
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                loadingMessage = "Updating wallpaper info..."
+            )
+
+            try {
+                updateWallpaperUseCase(updatedImage, useCache = true)
+            } finally {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    fun fetchAllProviderImages() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isFetchingImages = true)
+
+            val providers = listOf(
+                unsplashProvider, // Restored back
+                pexelsProvider,
+                pixabayProvider,
+                nasaProvider
+                // sourceSplashProvider // Removed as requested
+            )
+
+            val query = "nature landscape"
+
+            // Start with loading states for all
+            val providerImagesList = providers.map {
+                ProviderImages(providerName = it.name, images = emptyList(), isLoading = true)
+            }.toMutableList()
+
+            _uiState.value = _uiState.value.copy(providerImages = providerImagesList.toList())
+
+            // Fetch each provider concurrently
+            providers.forEachIndexed { index, provider ->
+                launch {
+                    try {
+                        val result = provider.fetchImages(query, null, count = 15)
+                        result.onSuccess { images ->
+                            providerImagesList[index] = ProviderImages(
+                                providerName = provider.name,
+                                images = images,
+                                isLoading = false
+                            )
+                        }.onFailure { error ->
+                            providerImagesList[index] = ProviderImages(
+                                providerName = provider.name,
+                                images = emptyList(),
+                                isLoading = false,
+                                error = error.message
+                            )
+                        }
+                    } catch (e: Exception) {
+                        providerImagesList[index] = ProviderImages(
+                            providerName = provider.name,
+                            images = emptyList(),
+                            isLoading = false,
+                            error = e.message
+                        )
+                    }
+                    // Update state immediately as each one finishes
+                    _uiState.value =
+                        _uiState.value.copy(providerImages = providerImagesList.toList())
+                }
+            }
+        }
+    }
+
+    fun selectImage(atmosImage: AtmosImage) {
+        viewModelScope.launch {
+            val currentProvider = userPreferencesRepository.preferredImageProvider.first()
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                loadingMessage = "$currentProvider: Getting weather and calendar data..."
+            )
+
+            try {
+                // Get location for weather data
+                val location = locationTracker.getCurrentLocation()
+                val lastKnownLocation = if (location != null) {
+                    val loc = Pair(location.latitude, location.longitude)
+                    userPreferencesRepository.setLastKnownLocation(loc)
+                    loc
+                } else {
+                    userPreferencesRepository.getLastKnownLocation()
+                }
+
+                // Get weather data
+                val weatherResult = wallpaperRepository.getWeather(
+                    lastKnownLocation.first,
+                    lastKnownLocation.second
+                )
+
+                val weatherData = weatherResult.getOrNull()?.let { weather ->
+                    val current = weather.current
+                    val isDay = current.is_day == 1
+                    com.smartmuseum.wallpaperapp.domain.model.WeatherData(
+                        currentTemp = current.temperature_2m,
+                        condition = getWeatherCondition(current.weather_code),
+                        weatherCode = current.weather_code,
+                        isDay = isDay,
+                        humidity = current.relative_humidity_2m,
+                        precipitation = current.precipitation,
+                        hourlyForecast = weather.hourly.time.mapIndexed { index, time ->
+                            com.smartmuseum.wallpaperapp.domain.model.HourlyForecast(
+                                time = time,
+                                temp = weather.hourly.temperature_2m[index],
+                                precipitationProb = weather.hourly.precipitation_probability[index],
+                                weatherCode = weather.hourly.weather_code[index]
+                            )
+                        }.take(12)
+                    )
+                }
+
+                // Get calendar events if enabled
+                val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
+                val calendarEvents = if (isCalendarEnabled) {
+                    calendarRepository.getTodaysEvents()
+                } else null
+
+                // Get location name
+                val locationName = try {
+                    val geocoder =
+                        android.location.Geocoder(application, java.util.Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(
+                        lastKnownLocation.first,
+                        lastKnownLocation.second,
+                        1
+                    )
+                    addresses?.firstOrNull()?.locality
+                        ?: addresses?.firstOrNull()?.subAdminArea
+                        ?: addresses?.firstOrNull()?.adminArea
+                } catch (_: Exception) {
+                    null
+                }
+
+                // Combine image with weather and calendar data
+                val finalImage = atmosImage.copy(
+                    weather = weatherData,
+                    calendarEvents = calendarEvents,
+                    locationName = locationName
+                )
+
+                _uiState.value =
+                    _uiState.value.copy(loadingMessage = "$currentProvider: Setting wallpaper...")
+
+                val success = updateWallpaperUseCase(finalImage)
+                if (success) {
+                    refreshData()
+                }
+            } catch (e: Exception) {
+                // Handle error - still try to set wallpaper without weather/calendar
+                val success = updateWallpaperUseCase(atmosImage)
+                if (success) {
+                    refreshData()
+                }
+            } finally {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    loadingProgress = 0f,
+                    loadingMessage = ""
+                )
+            }
+        }
+    }
+
+    private fun getWeatherCondition(code: Int): String {
+        return when (code) {
+            0 -> application.getString(R.string.condition_clear)
+            1, 2, 3 -> application.getString(R.string.condition_cloudy)
+            45, 48 -> application.getString(R.string.condition_fog)
+            51, 53, 55 -> application.getString(R.string.condition_drizzle)
+            56, 57 -> application.getString(R.string.condition_freezing_drizzle)
+            61, 63, 65 -> application.getString(R.string.condition_rain)
+            66, 67 -> application.getString(R.string.condition_freezing_rain)
+            71, 73, 75 -> application.getString(R.string.condition_snow)
+            77 -> application.getString(R.string.condition_snow_grains)
+            80, 81, 82 -> application.getString(R.string.condition_rain_showers)
+            85, 86 -> application.getString(R.string.condition_snow_showers)
+            95 -> application.getString(R.string.condition_thunderstorm)
+            96, 99 -> application.getString(R.string.condition_thunderstorm_hail)
+            else -> application.getString(R.string.condition_unknown)
         }
     }
 }

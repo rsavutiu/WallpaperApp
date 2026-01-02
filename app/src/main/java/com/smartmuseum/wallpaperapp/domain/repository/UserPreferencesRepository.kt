@@ -21,4 +21,6 @@ interface UserPreferencesRepository {
     val useLocation: Flow<Boolean>
     suspend fun setUseLocation(useLocation: Boolean)
 
+    val refreshPeriodInMinutes: Flow<Long>
+    suspend fun setRefreshPeriod(minutes: Long)
 }
