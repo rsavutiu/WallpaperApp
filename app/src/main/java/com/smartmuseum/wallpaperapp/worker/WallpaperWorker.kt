@@ -95,7 +95,7 @@ class WallpaperWorker @AssistedInject constructor(
 
         val notification = NotificationCompat.Builder(applicationContext, "atmos_updates")
             .setContentTitle(applicationContext.getString(R.string.app_name))
-            .setContentText("Updating weather conditions...")
+            .setContentText(context.getString(R.string.updating_weather))
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
