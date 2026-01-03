@@ -10,9 +10,7 @@ import com.smartmuseum.wallpaperapp.AtmosApplication
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -20,31 +18,21 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
+
+    @Inject
+    lateinit var workManager: WorkManager
+
     @Inject
     lateinit var userPreferencesRepository: UserPreferencesRepository
 
-    // Create a scope for the receiver to run the coroutine
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
-            intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
-        ) {
-
-            val pendingResult = goAsync() // Informs the OS to keep the process alive briefly
-
-            scope.launch {
+        if (intent.action == "android.intent.action.BOOT_COMPLETED") {
+            val pendingResult = goAsync()
+            GlobalScope.launch {
                 try {
-                    // Use .first() instead of collectLatest because we only need
-                    // the current value to schedule the work once after boot.
-                    val refreshPeriodInMinutes =
-                        userPreferencesRepository.refreshPeriodInMinutes.first()
-
-                    val workManager = WorkManager.getInstance(context)
-                    val workRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(
-                        refreshPeriodInMinutes.toLong(),
-                        TimeUnit.MINUTES
-                    ).build()
+                    val refreshPeriod = userPreferencesRepository.refreshPeriodInMinutes.first()
+                    val workRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(refreshPeriod, TimeUnit.MINUTES)
+                        .build()
 
                     workManager.enqueueUniquePeriodicWork(
                         AtmosApplication.WORK_MANAGER,
@@ -52,7 +40,7 @@ class BootReceiver : BroadcastReceiver() {
                         workRequest
                     )
                 } finally {
-                    pendingResult.finish() // Must call finish so the broadcast can be released
+                    pendingResult.finish()
                 }
             }
         }
