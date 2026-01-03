@@ -35,7 +35,9 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.smartmuseum.DEBUG_TRIGGER_BOOT" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
         <!-- 2. Configure WorkManager Service with types (Android 14 requirement) -->
@@ -47,6 +49,19 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE_DESCRIPTION"
                 android:value="Updating the dynamic wallpaper based on real-time weather, location, and calendar events to ensure visual accuracy." />
         </service>
+        <service
+            android:name=".ui.wallpaper.AtmosLiveWallpaperService"
+            android:enabled="true"
+            android:exported="true"
+            android:label="Atmos"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/atmos_wallpaper_info" />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -55,7 +70,6 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 

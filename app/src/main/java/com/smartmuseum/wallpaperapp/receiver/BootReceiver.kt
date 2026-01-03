@@ -3,7 +3,9 @@ package com.smartmuseum.wallpaperapp.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.smartmuseum.wallpaperapp.AtmosApplication
@@ -28,6 +30,7 @@ class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
+            intent.action == "com.smartmuseum.DEBUG_TRIGGER_BOOT" ||
             intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
         ) {
 
@@ -41,10 +44,16 @@ class BootReceiver : BroadcastReceiver() {
                         userPreferencesRepository.refreshPeriodInMinutes.first()
 
                     val workManager = WorkManager.getInstance(context)
+                    val constraints = Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build()
+
                     val workRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(
-                        refreshPeriodInMinutes.toLong(),
+                        refreshPeriodInMinutes,
                         TimeUnit.MINUTES
-                    ).build()
+                    )
+                        .setConstraints(constraints)
+                        .build()
 
                     workManager.enqueueUniquePeriodicWork(
                         AtmosApplication.WORK_MANAGER,

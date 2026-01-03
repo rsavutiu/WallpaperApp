@@ -11,6 +11,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -32,8 +35,11 @@ import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -42,6 +48,10 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
+sealed class NavigationEvent {
+    object OpenWallpaperPicker : NavigationEvent()
+}
 
 data class ProviderImages(
     val providerName: String,
@@ -54,7 +64,7 @@ data class MainUiState(
     val currentWallpaper: Bitmap? = null,
     val atmosImage: AtmosImage? = null,
     val workerProgress: String = "",
-    val rawWorkerProgress: String = "", // Added to track raw stage message
+    val rawWorkerProgress: String = "",
     val isWorkRunning: Boolean = false,
     val isCelsius: Boolean = true,
     val isLoading: Boolean = false,
@@ -89,12 +99,17 @@ class MainViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
+    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
+    val navigationEvent: SharedFlow<NavigationEvent> = _navigationEvent.asSharedFlow()
+
     init {
         refreshData()
         observeWork()
         observePreferences()
         observeUpdateSignal()
         fetchAllProviderImages()
+
+        triggerUpdate(immediate = false)
     }
 
     private fun observePreferences() {
@@ -149,21 +164,38 @@ class MainViewModel @Inject constructor(
     fun updateRefreshPeriod(minutes: Long) {
         viewModelScope.launch {
             userPreferencesRepository.setRefreshPeriod(minutes)
-            triggerUpdate(immediate = false) // Reschedule with new period
+            triggerUpdate(immediate = false)
         }
     }
 
     fun triggerUpdate(immediate: Boolean = true) {
         viewModelScope.launch {
             val period = userPreferencesRepository.refreshPeriodInMinutes.first()
-            val workRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(period, TimeUnit.MINUTES)
-                .build()
+
+            val periodicRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(
+                period, TimeUnit.MINUTES
+            ).build()
 
             workManager.enqueueUniquePeriodicWork(
                 AtmosApplication.WORK_MANAGER,
-                if (immediate) ExistingPeriodicWorkPolicy.REPLACE else ExistingPeriodicWorkPolicy.KEEP,
-                workRequest
+                ExistingPeriodicWorkPolicy.UPDATE,
+                periodicRequest
             )
+
+            if (immediate) {
+                val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
+                    .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                    .build()
+
+                workManager.enqueueUniqueWork(
+                    AtmosApplication.WORK_MANAGER + "_immediate",
+                    ExistingWorkPolicy.REPLACE,
+                    oneTimeRequest
+                )
+
+                // Emit event to open wallpaper picker
+                _navigationEvent.emit(NavigationEvent.OpenWallpaperPicker)
+            }
         }
     }
 
@@ -209,7 +241,6 @@ class MainViewModel @Inject constructor(
         val tertiary =
             Color(palette.getLightVibrantColor(palette.getLightMutedColor(Color.Magenta.toArgb())))
 
-        // Create a basic dark color scheme based on the extracted colors
         return darkColorScheme(
             primary = primary,
             secondary = secondary,
@@ -252,14 +283,12 @@ class MainViewModel @Inject constructor(
                         val isRunning = workInfo.state == WorkInfo.State.RUNNING
                         val shouldShowLoading = isRunning
 
-                        // Prepend provider name to the progress message
                         val currentProvider =
                             userPreferencesRepository.preferredImageProvider.first()
                         val displayProgress = if (progressMessage.isNotEmpty()) {
                             "$currentProvider: $progressMessage"
                         } else progressMessage
 
-                        // Mapping loadingProgress milestones:
                         val progressValue = when (progressMessage) {
                             application.getString(R.string.stage_location) -> 0.0f
                             application.getString(R.string.stage_weather) -> 0.33f
@@ -306,7 +335,6 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val currentAtmosImage = _uiState.value.atmosImage ?: return@launch
 
-            // Get fresh calendar events if enabled
             val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
             val events = if (isCalendarEnabled) {
                 calendarRepository.getTodaysEvents()
@@ -334,23 +362,20 @@ class MainViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isFetchingImages = true)
 
             val providers = listOf(
-                unsplashProvider, // Restored back
+                unsplashProvider,
                 pexelsProvider,
                 pixabayProvider,
                 nasaProvider
-                // sourceSplashProvider // Removed as requested
             )
 
             val query = "nature landscape"
 
-            // Start with loading states for all
             val providerImagesList = providers.map {
-                ProviderImages(providerName = it.name, images = emptyList(), isLoading = true)
+                ProviderImages(providerName = it.name, images = emptyList(), isLoading = true) 
             }.toMutableList()
 
             _uiState.value = _uiState.value.copy(providerImages = providerImagesList.toList())
 
-            // Fetch each provider concurrently
             providers.forEachIndexed { index, provider ->
                 launch {
                     try {
@@ -377,7 +402,6 @@ class MainViewModel @Inject constructor(
                             error = e.message
                         )
                     }
-                    // Update state immediately as each one finishes
                     _uiState.value =
                         _uiState.value.copy(providerImages = providerImagesList.toList())
                 }
@@ -394,7 +418,6 @@ class MainViewModel @Inject constructor(
             )
 
             try {
-                // Get location for weather data
                 val location = locationTracker.getCurrentLocation()
                 val lastKnownLocation = if (location != null) {
                     val loc = Pair(location.latitude, location.longitude)
@@ -404,7 +427,6 @@ class MainViewModel @Inject constructor(
                     userPreferencesRepository.getLastKnownLocation()
                 }
 
-                // Get weather data
                 val weatherResult = wallpaperRepository.getWeather(
                     lastKnownLocation.first,
                     lastKnownLocation.second
@@ -431,13 +453,11 @@ class MainViewModel @Inject constructor(
                     )
                 }
 
-                // Get calendar events if enabled
                 val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
                 val calendarEvents = if (isCalendarEnabled) {
                     calendarRepository.getTodaysEvents()
                 } else null
 
-                // Get location name
                 val locationName = try {
                     val geocoder =
                         android.location.Geocoder(application, java.util.Locale.getDefault())
@@ -453,7 +473,6 @@ class MainViewModel @Inject constructor(
                     null
                 }
 
-                // Combine image with weather and calendar data
                 val finalImage = atmosImage.copy(
                     weather = weatherData,
                     calendarEvents = calendarEvents,
@@ -468,7 +487,6 @@ class MainViewModel @Inject constructor(
                     refreshData()
                 }
             } catch (e: Exception) {
-                // Handle error - still try to set wallpaper without weather/calendar
                 val success = updateWallpaperUseCase(atmosImage)
                 if (success) {
                     refreshData()

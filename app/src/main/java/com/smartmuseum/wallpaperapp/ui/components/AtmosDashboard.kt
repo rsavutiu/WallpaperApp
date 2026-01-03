@@ -50,17 +50,21 @@ import java.util.Locale
 
 @Composable
 fun AtmosDashboard(
+    modifier: Modifier = Modifier,
     atmosImage: AtmosImage?,
     currentWallpaper: Bitmap?,
     isCelsius: Boolean,
     isCalendarEnabled: Boolean,
     onToggleUnit: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
     forceWeatherCode: Int? = null,
     forceTemp: Double? = null,
     forceIntensity: Float? = null
 ) {
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
         // Background Image Layer
         WallpaperBackground(currentWallpaper)
 
@@ -116,7 +120,8 @@ private fun WallpaperBackground(bitmap: Bitmap?) {
     } else {
         Box(modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black))
+            .background(Color(0xFF0F172A))
+        )
     }
 }
 
@@ -415,10 +420,13 @@ fun WeatherIcon(code: Int, isDay: Boolean, modifier: Modifier = Modifier) {
         96, 99 -> R.drawable.outline_weather_hail_24
         else -> if (isDay) R.drawable.outline_partly_cloudy_day_24 else R.drawable.outline_partly_cloudy_night_24
     }
-    Icon(
-        painter = painterResource(id = iconRes),
-        contentDescription = null,
-        tint = Color.White,
-        modifier = modifier
-    )
+
+    if (iconRes != 0) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            tint = Color.White,
+            modifier = modifier
+        )
+    }
 }

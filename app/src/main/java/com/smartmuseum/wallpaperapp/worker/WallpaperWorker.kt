@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -19,6 +20,7 @@ import com.smartmuseum.wallpaperapp.domain.usecase.GetAtmosImageUseCase
 import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 @HiltWorker
@@ -37,8 +39,15 @@ class WallpaperWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        setForeground(getForegroundInfo())
-
+        try {
+            setForegroundAsync(getForegroundInfo())
+        } catch (e: Exception) {
+            Log.e("WallpaperWorker", e.message ?: e.localizedMessage ?: e.stackTraceToString())
+            if (!e.message.isNullOrBlank() || e.localizedMessage.isNullOrBlank()) {
+                Log.e("WallpaperWorker", e.stackTraceToString())
+            }
+        }
+        delay(1500)
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_location)))
         val location = locationTracker.getCurrentLocation()
         val lastKnownLocation: Pair<Double, Double> = if (location != null) {
@@ -49,11 +58,11 @@ class WallpaperWorker @AssistedInject constructor(
         else {
             userPreferencesRepository.getLastKnownLocation()
         }
-
+        delay(1500)
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_weather)))
         val atmosImageResult =
             getAtmosImageUseCase(lastKnownLocation.first, lastKnownLocation.second)
-        
+        delay(500)
         return atmosImageResult.fold(
             onSuccess = { atmosImage ->
                 setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_wallpaper)))
