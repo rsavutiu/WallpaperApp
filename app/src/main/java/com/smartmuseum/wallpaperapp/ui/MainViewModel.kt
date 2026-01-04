@@ -184,7 +184,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setDebugTemperature(temp: Double) {
+    fun setDebugTemperature(temp: Double?) {
         viewModelScope.launch {
             userPreferencesRepository.setForcedTemperature(temp)
         }

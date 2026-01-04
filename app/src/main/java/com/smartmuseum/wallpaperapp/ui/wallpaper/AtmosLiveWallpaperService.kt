@@ -1,6 +1,5 @@
 package com.smartmuseum.wallpaperapp.ui.wallpaper
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -426,11 +425,8 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
-                // FIXED MAPPING:
-                // Pitch (Values[0]): Tilting phone forward/backwards -> Vertical shift
-                // Roll (Values[1]): Tilting phone left/right -> Horizontal shift
-                val rawX = event.values[1] * 120f
-                val rawY = event.values[0] * 100f
+                val rawX = event.values[0] * 120f
+                val rawY = event.values[1] * 100f
 
                 if (abs(rawX - smoothedGyroX) > deadZone * 50f) {
                     smoothedGyroX += (rawX - smoothedGyroX) * smoothingFactor
