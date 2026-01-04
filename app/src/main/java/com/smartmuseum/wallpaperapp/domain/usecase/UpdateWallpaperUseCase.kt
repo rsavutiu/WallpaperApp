@@ -8,8 +8,9 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.google.gson.Gson
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
-import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,8 +22,7 @@ import javax.inject.Inject
  * No longer sets the system static wallpaper directly.
  */
 class UpdateWallpaperUseCase @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-    private val userPreferencesRepository: UserPreferencesRepository
+    @param:ApplicationContext private val context: Context
 ) {
     suspend operator fun invoke(atmosImage: AtmosImage, useCache: Boolean = false): Boolean =
         withContext(Dispatchers.IO) {
@@ -30,7 +30,7 @@ class UpdateWallpaperUseCase @Inject constructor(
 
             // 1. Get the original bitmap (from cache or network)
             val bitmapToProcess = if (useCache) {
-                val rawFile = File(context.filesDir, "atmos_raw.png")
+                val rawFile = File(context.filesDir, RAW_IMAGE_FILE)
                 if (rawFile.exists()) {
                     try {
                         BitmapFactory.decodeFile(rawFile.absolutePath)
@@ -50,7 +50,7 @@ class UpdateWallpaperUseCase @Inject constructor(
                 if (result is SuccessResult) {
                     val downloaded = result.drawable.toBitmap()
                     // Save the CLEAN original image
-                    saveBitmapLocally(downloaded, "atmos_raw.png")
+                    saveBitmapLocally(downloaded, RAW_IMAGE_FILE)
                     downloaded
                 } else null
             }
@@ -58,7 +58,6 @@ class UpdateWallpaperUseCase @Inject constructor(
             if (originalBitmap != null) {
                 // 2. Save metadata and trigger update signal
                 saveMetadataLocally(atmosImage)
-                userPreferencesRepository.updateLastUpdateTimestamp()
                 return@withContext true
             }
             false
@@ -72,7 +71,7 @@ class UpdateWallpaperUseCase @Inject constructor(
 
     private fun saveMetadataLocally(atmosImage: AtmosImage) {
         val json = Gson().toJson(atmosImage)
-        context.openFileOutput("atmos_metadata.json", Context.MODE_PRIVATE).use {
+        context.openFileOutput(METADATA_FILE, Context.MODE_PRIVATE).use {
             it.write(json.toByteArray())
         }
     }

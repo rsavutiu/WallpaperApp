@@ -5,9 +5,6 @@ import kotlinx.coroutines.flow.Flow
 interface UserPreferencesRepository {
     val isCelsius: Flow<Boolean>
     suspend fun setCelsius(isCelsius: Boolean)
-    
-    val lastUpdateTimestamp: Flow<Long>
-    suspend fun updateLastUpdateTimestamp()
 
     suspend fun getLastKnownLocation(): Pair<Double, Double>
     suspend fun setLastKnownLocation(location: Pair<Double, Double>)

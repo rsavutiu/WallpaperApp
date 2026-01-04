@@ -21,6 +21,8 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.google.gson.Gson
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.ui.components.AtmosDashboard
@@ -73,7 +75,7 @@ class AtmosDreamService : DreamService(), SavedStateRegistryOwner {
                     launch {
                         try {
                             // Load the RAW image to avoid double text/icons in the screensaver
-                            val rawFile = File(filesDir, "atmos_raw.png")
+                            val rawFile = File(filesDir, RAW_IMAGE_FILE)
                             val wallpaperFile = File(filesDir, "atmos_wallpaper.png")
                             
                             val fileToLoad = if (rawFile.exists()) rawFile else if (wallpaperFile.exists()) wallpaperFile else null
@@ -88,7 +90,7 @@ class AtmosDreamService : DreamService(), SavedStateRegistryOwner {
                                 }
                             }
 
-                            val metadataFile = File(filesDir, "atmos_metadata.json")
+                            val metadataFile = File(filesDir, METADATA_FILE)
                             if (metadataFile.exists()) {
                                 val json = metadataFile.readText()
                                 atmosImage = Gson().fromJson(json, AtmosImage::class.java)

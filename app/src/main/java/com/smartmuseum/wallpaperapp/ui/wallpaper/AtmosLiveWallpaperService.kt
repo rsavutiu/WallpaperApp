@@ -30,9 +30,12 @@ import androidx.palette.graphics.Palette
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.smartmuseum.wallpaperapp.AtmosApplication
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.model.HourlyForecast
@@ -209,7 +212,7 @@ private const val CLOUD_DRIFT_SHADER = WEATHER_HEADER + """
         float2 uv = (fragCoord + iOffset * 0.3) / iResolution.xy;
         float2 p = uv * float2(0.8, 1.2);
         p.x -= iTime * 0.015;
-        float n = fbm(p + fbm(p * 1.1) * 0.25);
+        float n = fbm(p + fbm(p * 1.0) * 0.25);
         float a = clamp(n * 0.5 * (1.0 - uv.y) * (0.6 + iIntensity * 0.4), 0.0, 1.0);
         return half4(a, a, a, a);
     }
@@ -284,25 +287,25 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
                 launch {
                     userPreferencesRepository.isCelsius.collect {
-                        isCelsius = it
+                        isCelsius = it 
                         drawFrame()
                     }
                 }
                 launch {
                     userPreferencesRepository.isCalendarEnabled.collect {
-                        isCalendarEnabled = it
+                        isCalendarEnabled = it 
                         drawFrame()
                     }
                 }
                 launch {
-                    userPreferencesRepository.forcedWeatherCode.collect {
+                    userPreferencesRepository.forcedWeatherCode.collect { 
                         forcedWeatherCode = it
                         updateWeatherShader()
                         drawFrame()
                     }
                 }
                 launch {
-                    userPreferencesRepository.forcedTemperature.collect {
+                    userPreferencesRepository.forcedTemperature.collect { 
                         forcedTemperature = it
                         updateWeatherShader()
                         drawFrame()
@@ -310,13 +313,18 @@ class AtmosLiveWallpaperService : WallpaperService() {
                 }
                 launch {
                     userPreferencesRepository.refreshPeriodInMinutes.collectLatest {
-                        Log.i(TAG, "Refresh period was $refreshPeriod to $it")
                         refreshPeriod = it
                     }
-                    userPreferencesRepository.lastUpdateTimestamp.collectLatest {
-                        lastUpdateTimestamp = it
-                        loadData()
-                    }
+                }
+                // Observe WorkManager progress/completion
+                launch {
+                    workManager.getWorkInfosByTagFlow(AtmosApplication.WALLPAPER_UPDATE_TAG)
+                        .collect { workInfos ->
+                            val info = workInfos.firstOrNull()
+                            if (info != null && info.state == WorkInfo.State.SUCCEEDED) {
+                                loadData()
+                            }
+                        }
                 }
                 loadData()
             }
@@ -325,9 +333,9 @@ class AtmosLiveWallpaperService : WallpaperService() {
         private fun loadData() {
             scope.launch(Dispatchers.IO) {
                 try {
-                    val rawFile = File(filesDir, "atmos_raw.png")
-                    val metadataFile = File(filesDir, "atmos_metadata.json")
-
+                    val rawFile = File(filesDir, RAW_IMAGE_FILE)
+                    val metadataFile = File(filesDir, METADATA_FILE)
+                    
                     if (rawFile.exists() && rawFile.length() > 0) {
                         val loadedBitmap = BitmapFactory.decodeFile(rawFile.absolutePath)
                         if (loadedBitmap != null) {
@@ -426,11 +434,10 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
-                // FIXED MAPPING:
-                // Pitch (Values[0]): Tilting phone forward/backwards -> Vertical shift
-                // Roll (Values[1]): Tilting phone left/right -> Horizontal shift
-                val rawX = event.values[1] * 120f
-                val rawY = event.values[0] * 100f
+                // event.values[1] is roll (left/right tilt)
+                // event.values[0] is pitch (forward/back tilt)
+                val rawX = event.values[0] * 120f
+                val rawY = event.values[1] * 100f
 
                 if (abs(rawX - smoothedGyroX) > deadZone * 50f) {
                     smoothedGyroX += (rawX - smoothedGyroX) * smoothingFactor
@@ -448,12 +455,12 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         private fun drawFrame() {
             scope.launch {
-                if (System.currentTimeMillis() - lastUpdateTimestamp > refreshPeriod * 1000 * 60) {
-                    Log.i(TAG, "Enqueue work. Last update: $lastUpdateTimestamp")
-                    Log.i(TAG, "Enqueue work. Elapsed realtime: ${System.currentTimeMillis()}")
-                    lastUpdateTimestamp = System.currentTimeMillis()
+                val current = System.currentTimeMillis()
+                if (current - lastUpdateTimestamp > refreshPeriod * 1000 * 60) {
+                    lastUpdateTimestamp = current
                     val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
                         .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                        .addTag(AtmosApplication.WALLPAPER_UPDATE_TAG)
                         .build()
 
                     workManager.enqueueUniqueWork(
@@ -491,7 +498,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
                     val dst = RectF(
                         -60f + gyroOffsetX * gyroScale,
                         -60f + gyroOffsetY * gyroScale,
-                        width + 60f + gyroOffsetX * gyroScale,
+                        width + 60f + gyroOffsetX * gyroScale, 
                         height + 60f + gyroOffsetY * gyroScale
                     )
                     canvas.drawBitmap(bmp, src, dst.toRect(), null)
@@ -538,7 +545,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         private fun drawDashboardContent(canvas: Canvas, width: Float, height: Float) {
             val margin = width * 0.08f
-            var currentY = height * 0.08f
+            var currentY = height * 0.08f 
 
             val textPaint = Paint().apply {
                 color = Color.WHITE
@@ -584,7 +591,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
                     height * 0.05f,
                     Color.WHITE
                 )
-
+                
                 currentY += height * 0.09f
 
                 textPaint.textSize = height * 0.03f
@@ -648,26 +655,12 @@ class AtmosLiveWallpaperService : WallpaperService() {
                 textPaint.color = Color.GRAY
                 textPaint.textAlign = Paint.Align.CENTER
 
-                //attribution at bottom
                 canvas.drawText(
                     img.attribution,
                     width / 2f - contentParallaxShift,
                     height - 80f,
                     textPaint
                 )
-
-                // DEBUG ONLY: Show last refresh time
-                if (com.smartmuseum.wallpaperapp.BuildConfig.DEBUG) {
-                    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                    val timeStr = "Last Refresh: ${sdf.format(Date(lastUpdateTimestamp))}"
-                    textPaint.color = Color.RED
-                    canvas.drawText(
-                        timeStr,
-                        width / 2f - contentParallaxShift,
-                        height - 200f,
-                        textPaint
-                    )
-                }
             }
         }
 

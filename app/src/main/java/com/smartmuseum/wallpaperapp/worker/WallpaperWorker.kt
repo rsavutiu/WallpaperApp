@@ -36,26 +36,28 @@ class WallpaperWorker @AssistedInject constructor(
 
     companion object {
         const val PROGRESS_KEY = "progress"
+        const val TAG = "WALLPAPER_WORKER"
     }
 
     override suspend fun doWork(): Result {
         try {
             setForegroundAsync(getForegroundInfo())
         } catch (e: Exception) {
-            Log.e("WallpaperWorker", e.message ?: e.localizedMessage ?: e.stackTraceToString())
+            Log.e(TAG, e.message ?: e.localizedMessage ?: e.stackTraceToString())
             if (!e.message.isNullOrBlank() || e.localizedMessage.isNullOrBlank()) {
-                Log.e("WallpaperWorker", e.stackTraceToString())
+                Log.e(TAG, e.stackTraceToString())
             }
         }
         delay(1500)
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_location)))
         val location = locationTracker.getCurrentLocation()
         val lastKnownLocation: Pair<Double, Double> = if (location != null) {
+            Log.i(TAG, "Current location: $location. Will set as last known location")
             val temp = Pair(location.latitude, location.longitude)
             userPreferencesRepository.setLastKnownLocation(temp)
             temp
-        }
-        else {
+        } else {
+            Log.w(TAG, "Using old location: $location")
             userPreferencesRepository.getLastKnownLocation()
         }
         delay(1500)

@@ -28,7 +28,6 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     private object PreferencesKeys {
         val REFRESH_PERIOD = longPreferencesKey("refresh_period")
         val IS_CELSIUS = booleanPreferencesKey("is_celsius")
-        val LAST_UPDATE = longPreferencesKey("last_update")
         val LONGITUDE = doublePreferencesKey("longitude")
         val LATITUDE = doublePreferencesKey("latitude")
         val PREFERRED_PROVIDER = stringPreferencesKey("preferred_provider")
@@ -48,15 +47,15 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         }
     }
 
-    override val lastUpdateTimestamp: Flow<Long> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LAST_UPDATE] ?: 0L
-    }
-
-    override suspend fun updateLastUpdateTimestamp() {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LAST_UPDATE] = System.currentTimeMillis()
+    /*    override val lastUpdateTimestamp: Flow<Long> = context.dataStore.data.map { preferences ->
+            preferences[PreferencesKeys.LAST_UPDATE] ?: 0L
         }
-    }
+
+        override suspend fun updateLastUpdateTimestamp() {
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.LAST_UPDATE] = System.currentTimeMillis()
+            }
+        }*/
 
     override suspend fun getLastKnownLocation(): Pair<Double, Double> {
         val preferences = context.dataStore.data.first()

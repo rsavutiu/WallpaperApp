@@ -49,7 +49,7 @@ fun MainApp(
     updateRefreshPeriod: (Long) -> Unit,
     triggerUpdate: (Boolean) -> Unit,
     setDebugWeatherCode: (Int?) -> Unit,
-    setDebugTemperature: (Double) -> Unit,
+    setDebugTemperature: (Double?) -> Unit,
     isTV: Boolean = false
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }

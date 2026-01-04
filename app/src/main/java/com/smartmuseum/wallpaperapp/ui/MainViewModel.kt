@@ -3,6 +3,8 @@ package com.smartmuseum.wallpaperapp.ui
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Geocoder
+import android.os.Build
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.ui.graphics.Color
@@ -17,18 +19,18 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.gson.Gson
 import com.smartmuseum.wallpaperapp.AtmosApplication
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.data.repository.NasaImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.PexelsImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.PixabayImageProvider
-import com.smartmuseum.wallpaperapp.data.repository.SourceSplashImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.UnsplashImageProvider
 import com.smartmuseum.wallpaperapp.domain.location.LocationTracker
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
-import com.smartmuseum.wallpaperapp.domain.usecase.GetAtmosImageUseCase
 import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -43,9 +45,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.Locale
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 sealed class NavigationEvent {
     object OpenWallpaperPicker : NavigationEvent()
@@ -88,8 +93,6 @@ class MainViewModel @Inject constructor(
     private val nasaProvider: NasaImageProvider,
     private val pixabayProvider: PixabayImageProvider,
     private val pexelsProvider: PexelsImageProvider,
-    private val sourceSplashProvider: SourceSplashImageProvider,
-    private val getAtmosImageUseCase: GetAtmosImageUseCase,
     private val updateWallpaperUseCase: UpdateWallpaperUseCase,
     private val locationTracker: LocationTracker,
     private val wallpaperRepository: WallpaperRepository,
@@ -106,7 +109,6 @@ class MainViewModel @Inject constructor(
         refreshData()
         observeWork()
         observePreferences()
-        observeUpdateSignal()
         fetchAllProviderImages()
 
         triggerUpdate(openWallpaperPreview = false)
@@ -150,14 +152,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun observeUpdateSignal() {
-        viewModelScope.launch {
-            userPreferencesRepository.lastUpdateTimestamp.collect { 
-                refreshData()
-            }
-        }
-    }
-
     fun toggleTemperatureUnit() {
         viewModelScope.launch {
             userPreferencesRepository.setCelsius(!_uiState.value.isCelsius)
@@ -184,7 +178,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun setDebugTemperature(temp: Double) {
+    fun setDebugTemperature(temp: Double?) {
         viewModelScope.launch {
             userPreferencesRepository.setForcedTemperature(temp)
         }
@@ -198,12 +192,6 @@ class MainViewModel @Inject constructor(
 
     fun triggerUpdate(openWallpaperPreview: Boolean) {
         viewModelScope.launch {
-            /*val period = userPreferencesRepository.refreshPeriodInMinutes.first()
-
-            val periodicRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(
-                period, TimeUnit.MINUTES
-            ).build()*/
-
             val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .build()
@@ -230,7 +218,7 @@ class MainViewModel @Inject constructor(
     private fun loadLocalWallpaper() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val rawFile = File(application.filesDir, "atmos_raw.png")
+                val rawFile = File(application.filesDir, RAW_IMAGE_FILE)
                 val wallpaperFile = File(application.filesDir, "atmos_wallpaper.png")
 
                 val fileToLoad =
@@ -282,7 +270,7 @@ class MainViewModel @Inject constructor(
     private fun loadLocalMetadata() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val file = File(application.filesDir, "atmos_metadata.json")
+                val file = File(application.filesDir, METADATA_FILE)
                 if (file.exists()) {
                     val json = file.readText()
                     val atmosImage = Gson().fromJson(json, AtmosImage::class.java)
@@ -492,20 +480,10 @@ class MainViewModel @Inject constructor(
                     calendarRepository.getTodaysEvents()
                 } else null
 
-                val locationName = try {
-                    val geocoder =
-                        android.location.Geocoder(application, java.util.Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(
-                        lastKnownLocation.first,
-                        lastKnownLocation.second,
-                        1
-                    )
-                    addresses?.firstOrNull()?.locality
-                        ?: addresses?.firstOrNull()?.subAdminArea
-                        ?: addresses?.firstOrNull()?.adminArea
-                } catch (_: Exception) {
-                    null
-                }
+                val locationName = getCityName(
+                    lastKnownLocation.first,
+                    lastKnownLocation.second
+                )
 
                 val finalImage = atmosImage.copy(
                     weather = weatherData,
@@ -534,6 +512,29 @@ class MainViewModel @Inject constructor(
                     loadingMessage = ""
                     )
                 }
+            }
+        }
+    }
+
+    private suspend fun getCityName(lat: Double, lon: Double): String? =
+        withContext(Dispatchers.IO) {
+            val geocoder = Geocoder(application, Locale.getDefault())
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                suspendCancellableCoroutine { continuation ->
+                    geocoder.getFromLocation(lat, lon, 1) { addresses ->
+                        val address = addresses.firstOrNull()
+                        val city = address?.locality ?: address?.subAdminArea ?: address?.adminArea
+                        continuation.resume(city)
+                    }
+                }
+            } else {
+                try {
+                    @Suppress("DEPRECATION")
+                    val addresses = geocoder.getFromLocation(lat, lon, 1)
+                    val address = addresses?.firstOrNull()
+                    address?.locality ?: address?.subAdminArea ?: address?.adminArea
+                } catch (e: Exception) {
+                    null
             }
         }
     }

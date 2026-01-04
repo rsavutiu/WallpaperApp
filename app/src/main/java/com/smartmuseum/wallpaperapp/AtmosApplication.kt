@@ -19,5 +19,8 @@ class AtmosApplication : Application(), Configuration.Provider {
 
     companion object {
         const val WORK_MANAGER = "AtmosApplicationWorkManager"
+        const val RAW_IMAGE_FILE = "atmos_raw.png"
+        const val METADATA_FILE = "atmos_metadata.json"
+        const val WALLPAPER_UPDATE_TAG = "WALLPAPER_UPDATE_TAG"
     }
 }

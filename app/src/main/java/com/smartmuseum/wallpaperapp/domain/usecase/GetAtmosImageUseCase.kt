@@ -2,7 +2,10 @@ package com.smartmuseum.wallpaperapp.domain.usecase
 
 import android.content.Context
 import android.location.Geocoder
+import android.util.Log
 import com.google.gson.Gson
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
+import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.data.repository.NasaImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.PexelsImageProvider
@@ -41,6 +44,7 @@ class GetAtmosImageUseCase @Inject constructor(
     ): Result<AtmosImage> {
         return try {
             val weather = wallpaperRepository.getWeather(lat, lon).getOrThrow()
+            Log.i(TAG, "Weather: $weather")
             val current = weather.current
             val isDay = current.is_day == 1
             val weatherData = WeatherData(
@@ -68,27 +72,30 @@ class GetAtmosImageUseCase @Inject constructor(
             } else null
 
             // Check if we already have an image and shouldn't refresh it
-            val rawFile = File(context.filesDir, "atmos_raw.png")
-            val metadataFile = File(context.filesDir, "atmos_metadata.json")
-
+            val rawFile = File(context.filesDir, RAW_IMAGE_FILE)
+            val metadataFile = File(context.filesDir, METADATA_FILE)
             if (!forceRefreshImage && rawFile.exists() && metadataFile.exists()) {
                 try {
+                    Log.i(TAG, "Using cached image")
                     val json = metadataFile.readText()
                     val cachedImage = Gson().fromJson(json, AtmosImage::class.java)
                     if (cachedImage != null) {
-                        return Result.success(
-                            cachedImage.copy(
-                                weather = weatherData,
-                                locationName = locationName,
-                                calendarEvents = events
-                            )
+                        Log.i(TAG, "Using cached image SUCCESS")
+
+                        val newImage = cachedImage.copy(
+                            weather = weatherData,
+                            locationName = locationName,
+                            calendarEvents = events
                         )
+                        updateMetadata(atmosImage = newImage)
+                        return Result.success(value = newImage)
                     }
-                } catch (_: Exception) {
-                    // Fallback to fetching a new image if cache is corrupted
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error ${e.message}")
+                    Log.e(TAG, " Fallback to fetching a new image if cache is corrupted ")
                 }
             }
-
+            Log.w(TAG, "Fallback to fetching a new image")
             // If we reach here, we need to fetch a NEW image (either forced or none exists)
             val preferredProviderName: String =
                 userPreferencesRepository.preferredImageProvider.first()
@@ -141,6 +148,13 @@ class GetAtmosImageUseCase @Inject constructor(
             )
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    private fun updateMetadata(atmosImage: AtmosImage) {
+        val json = Gson().toJson(atmosImage)
+        context.openFileOutput(RAW_IMAGE_FILE, Context.MODE_PRIVATE).use {
+            it.write(json.toByteArray())
         }
     }
 
@@ -202,5 +216,9 @@ class GetAtmosImageUseCase @Inject constructor(
             96, 99 -> context.getString(R.string.condition_thunderstorm_hail)
             else -> context.getString(R.string.condition_unknown)
         }
+    }
+
+    companion object {
+        const val TAG = "GetAtmosImageUseCase"
     }
 }

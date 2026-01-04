@@ -59,7 +59,7 @@ fun SetupScreen(
     updateRefreshPeriod: (Long) -> Unit,
     debugWeatherCode: Int?,
     debugTemp: Double,
-    onDebugTempChange: (Double) -> Unit
+    onDebugTempChange: (Double?) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val refreshOptions = remember {
@@ -247,7 +247,7 @@ private fun DebugWeatherSection(
     onDebugWeatherChange: (Int?) -> Unit,
     debugWeatherCode: Int?,
     debugTemp: Double,
-    onDebugTempChange: (Double) -> Unit
+    onDebugTempChange: (Double?) -> Unit
 ) {
     Surface(
         color = Color.Black.copy(alpha = 0.6f),
@@ -271,7 +271,7 @@ private fun DebugWeatherSection(
                 )
 
                 Button(
-                    onClick = { onDebugWeatherChange(null) },
+                    onClick = { onDebugWeatherChange(null); onDebugTempChange(null) },
                     colors = buttonColors,
                     contentPadding = PaddingValues(4.dp)
                 ) { Text(if (debugWeatherCode == null) "[Auto]" else "Auto") }
