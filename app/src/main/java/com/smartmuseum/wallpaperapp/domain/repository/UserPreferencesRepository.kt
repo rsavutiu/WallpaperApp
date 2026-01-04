@@ -23,4 +23,11 @@ interface UserPreferencesRepository {
 
     val refreshPeriodInMinutes: Flow<Long>
     suspend fun setRefreshPeriod(minutes: Long)
+
+    // Debug forced weather options
+    val forcedWeatherCode: Flow<Int?>
+    suspend fun setForcedWeatherCode(code: Int?)
+
+    val forcedTemperature: Flow<Double?>
+    suspend fun setForcedTemperature(temp: Double?)
 }

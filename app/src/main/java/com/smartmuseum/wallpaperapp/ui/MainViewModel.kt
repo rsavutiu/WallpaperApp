@@ -10,11 +10,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
-import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.gson.Gson
@@ -43,10 +41,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 sealed class NavigationEvent {
@@ -76,7 +74,9 @@ data class MainUiState(
     val customColorScheme: ColorScheme? = null,
     val providerImages: List<ProviderImages> = emptyList(),
     val isFetchingImages: Boolean = false,
-    val refreshPeriodInMinutes: Long = 30
+    val refreshPeriodInMinutes: Long = 30,
+    val debugWeatherCode: Int? = null,
+    val debugTemperature: Double = 20.0
 )
 
 @HiltViewModel
@@ -109,33 +109,43 @@ class MainViewModel @Inject constructor(
         observeUpdateSignal()
         fetchAllProviderImages()
 
-        triggerUpdate(immediate = false)
+        triggerUpdate(openWallpaperPreview = false)
     }
 
     private fun observePreferences() {
         viewModelScope.launch {
             userPreferencesRepository.isCelsius.collect { isCelsius ->
-                _uiState.value = _uiState.value.copy(isCelsius = isCelsius)
+                _uiState.update { it.copy(isCelsius = isCelsius) }
             }
         }
         viewModelScope.launch {
             userPreferencesRepository.preferredImageProvider.collect { provider ->
-                _uiState.value = _uiState.value.copy(preferredProvider = provider)
+                _uiState.update { it.copy(preferredProvider = provider) }
             }
         }
         viewModelScope.launch {
             userPreferencesRepository.useLocation.collect { useLocation ->
-                _uiState.value = _uiState.value.copy(useLocation = useLocation)
+                _uiState.update { it.copy(useLocation = useLocation) }
             }
         }
         viewModelScope.launch {
             userPreferencesRepository.isCalendarEnabled.collect { enabled ->
-                _uiState.value = _uiState.value.copy(isCalendarEnabled = enabled)
+                _uiState.update { it.copy(isCalendarEnabled = enabled) }
             }
         }
         viewModelScope.launch {
             userPreferencesRepository.refreshPeriodInMinutes.collect { period ->
-                _uiState.value = _uiState.value.copy(refreshPeriodInMinutes = period)
+                _uiState.update { it.copy(refreshPeriodInMinutes = period) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.forcedWeatherCode.collect { code ->
+                _uiState.update { it.copy(debugWeatherCode = code) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.forcedTemperature.collect { temp ->
+                _uiState.update { it.copy(debugTemperature = temp ?: 20.0) }
             }
         }
     }
@@ -164,36 +174,47 @@ class MainViewModel @Inject constructor(
     fun updateRefreshPeriod(minutes: Long) {
         viewModelScope.launch {
             userPreferencesRepository.setRefreshPeriod(minutes)
-            triggerUpdate(immediate = false)
+            triggerUpdate(openWallpaperPreview = false)
         }
     }
 
-    fun triggerUpdate(immediate: Boolean = true) {
+    fun setDebugWeatherCode(code: Int?) {
         viewModelScope.launch {
-            val period = userPreferencesRepository.refreshPeriodInMinutes.first()
+            userPreferencesRepository.setForcedWeatherCode(code)
+        }
+    }
+
+    fun setDebugTemperature(temp: Double) {
+        viewModelScope.launch {
+            userPreferencesRepository.setForcedTemperature(temp)
+        }
+    }
+
+    fun triggerLiveWallpaper() {
+        viewModelScope.launch {
+            _navigationEvent.emit(NavigationEvent.OpenWallpaperPicker)
+        }
+    }
+
+    fun triggerUpdate(openWallpaperPreview: Boolean) {
+        viewModelScope.launch {
+            /*val period = userPreferencesRepository.refreshPeriodInMinutes.first()
 
             val periodicRequest = PeriodicWorkRequestBuilder<WallpaperWorker>(
                 period, TimeUnit.MINUTES
-            ).build()
+            ).build()*/
 
-            workManager.enqueueUniquePeriodicWork(
-                AtmosApplication.WORK_MANAGER,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                periodicRequest
+            val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .build()
+
+            workManager.enqueueUniqueWork(
+                AtmosApplication.WORK_MANAGER + "_immediate",
+                ExistingWorkPolicy.REPLACE,
+                oneTimeRequest
             )
 
-            if (immediate) {
-                val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
-                    .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                    .build()
-
-                workManager.enqueueUniqueWork(
-                    AtmosApplication.WORK_MANAGER + "_immediate",
-                    ExistingWorkPolicy.REPLACE,
-                    oneTimeRequest
-                )
-
-                // Emit event to open wallpaper picker
+            if (openWallpaperPreview) {
                 _navigationEvent.emit(NavigationEvent.OpenWallpaperPicker)
             }
         }
@@ -221,10 +242,12 @@ class MainViewModel @Inject constructor(
                         val palette = Palette.from(bitmap).generate()
                         val colorScheme = createColorSchemeFromPalette(palette)
                         withContext(Dispatchers.Main) {
-                            _uiState.value = _uiState.value.copy(
-                                currentWallpaper = bitmap,
-                                customColorScheme = colorScheme
-                            )
+                            _uiState.update { state ->
+                                state.copy(
+                                    currentWallpaper = bitmap,
+                                    customColorScheme = colorScheme
+                                )
+                            }
                         }
                     }
                 }
@@ -264,7 +287,7 @@ class MainViewModel @Inject constructor(
                     val json = file.readText()
                     val atmosImage = Gson().fromJson(json, AtmosImage::class.java)
                     withContext(Dispatchers.Main) {
-                        _uiState.value = _uiState.value.copy(atmosImage = atmosImage)
+                        _uiState.update { it.copy(atmosImage = atmosImage) }
                     }
                 }
             } catch (_: Exception) {
@@ -297,21 +320,25 @@ class MainViewModel @Inject constructor(
                             else -> if (isRunning) 0.05f else 0f
                         }
 
-                        _uiState.value = _uiState.value.copy(
-                            workerProgress = displayProgress,
-                            rawWorkerProgress = progressMessage,
-                            isLoading = shouldShowLoading,
-                            loadingMessage = if (displayProgress.isEmpty() && isRunning)
-                                "$currentProvider: ${application.getString(R.string.initializing)}" else displayProgress,
-                            loadingProgress = progressValue,
-                            isWorkRunning = isRunning
-                        )
+                        _uiState.update { state ->
+                            state.copy(
+                                workerProgress = displayProgress,
+                                rawWorkerProgress = progressMessage,
+                                isLoading = shouldShowLoading,
+                                loadingMessage = if (displayProgress.isEmpty() && isRunning)
+                                    "$currentProvider: ${application.getString(R.string.initializing)}" else displayProgress,
+                                loadingProgress = progressValue,
+                                isWorkRunning = isRunning
+                            )
+                        }
                     } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            loadingProgress = 0f,
-                            loadingMessage = ""
-                        )
+                        _uiState.update { state ->
+                            state.copy(
+                                isLoading = false,
+                                loadingProgress = 0f,
+                                loadingMessage = ""
+                            )
+                        }
                     }
                 }
         }
@@ -342,24 +369,28 @@ class MainViewModel @Inject constructor(
 
             val updatedImage = currentAtmosImage.copy(calendarEvents = events)
 
-            _uiState.value = _uiState.value.copy(
+            _uiState.update {
+                it.copy(
                 isLoading = true,
                 loadingMessage = "Updating wallpaper info..."
-            )
+                )
+            }
 
             try {
                 updateWallpaperUseCase(updatedImage, useCache = true)
             } finally {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update {
+                    it.copy(
                     isLoading = false
-                )
+                    )
+                }
             }
         }
     }
 
     fun fetchAllProviderImages() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isFetchingImages = true)
+            _uiState.update { it.copy(isFetchingImages = true) }
 
             val providers = listOf(
                 unsplashProvider,
@@ -374,7 +405,7 @@ class MainViewModel @Inject constructor(
                 ProviderImages(providerName = it.name, images = emptyList(), isLoading = true) 
             }.toMutableList()
 
-            _uiState.value = _uiState.value.copy(providerImages = providerImagesList.toList())
+            _uiState.update { it.copy(providerImages = providerImagesList.toList()) }
 
             providers.forEachIndexed { index, provider ->
                 launch {
@@ -402,8 +433,9 @@ class MainViewModel @Inject constructor(
                             error = e.message
                         )
                     }
-                    _uiState.value =
-                        _uiState.value.copy(providerImages = providerImagesList.toList())
+                    _uiState.update {
+                        it.copy(providerImages = providerImagesList.toList())
+                    }
                 }
             }
         }
@@ -412,10 +444,12 @@ class MainViewModel @Inject constructor(
     fun selectImage(atmosImage: AtmosImage) {
         viewModelScope.launch {
             val currentProvider = userPreferencesRepository.preferredImageProvider.first()
-            _uiState.value = _uiState.value.copy(
+            _uiState.update {
+                it.copy(
                 isLoading = true,
                 loadingMessage = "$currentProvider: Getting weather and calendar data..."
-            )
+                )
+            }
 
             try {
                 val location = locationTracker.getCurrentLocation()
@@ -479,8 +513,9 @@ class MainViewModel @Inject constructor(
                     locationName = locationName
                 )
 
-                _uiState.value =
-                    _uiState.value.copy(loadingMessage = "$currentProvider: Setting wallpaper...")
+                _uiState.update {
+                    it.copy(loadingMessage = "$currentProvider: Setting wallpaper...")
+                }
 
                 val success = updateWallpaperUseCase(finalImage)
                 if (success) {
@@ -492,11 +527,13 @@ class MainViewModel @Inject constructor(
                     refreshData()
                 }
             } finally {
-                _uiState.value = _uiState.value.copy(
+                _uiState.update {
+                    it.copy(
                     isLoading = false,
                     loadingProgress = 0f,
                     loadingMessage = ""
-                )
+                    )
+                }
             }
         }
     }

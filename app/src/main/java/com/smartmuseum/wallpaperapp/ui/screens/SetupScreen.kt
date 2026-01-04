@@ -62,7 +62,13 @@ fun SetupScreen(
     onDebugTempChange: (Double) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val refreshOptions = listOf(15, 30, 60, 120, 240) // Minutes
+    val refreshOptions = remember {
+        mutableListOf<Long>().apply {
+            if (BuildConfig.DEBUG) add(1L) // 1 minute for debug
+            addAll(listOf(15L, 30L, 60L, 120L, 240L))
+        }
+    }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -145,15 +151,20 @@ fun SetupScreen(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    text = if (minutes >= 60) stringResource(
-                                        R.string.hours,
-                                        minutes / 60
-                                    ) else stringResource(R.string.minutes, minutes),
+                                    text = when {
+                                        minutes == 1L -> "1 minute"
+                                        minutes >= 60L -> stringResource(
+                                            R.string.hours,
+                                            minutes / 60
+                                        )
+
+                                        else -> stringResource(R.string.minutes, minutes)
+                                    },
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             },
                             onClick = {
-                                updateRefreshPeriod(minutes.toLong())
+                                updateRefreshPeriod(minutes)
                                 expanded = false
                             }
                         )
@@ -201,7 +212,7 @@ private fun SetupRow(
 ) {
     Surface(
         onClick = onClick,
-        color = Color.Black.copy(alpha = 0.6f), // Increased opacity as requested
+        color = Color.Black.copy(alpha = 0.6f),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -217,7 +228,7 @@ private fun SetupRow(
                     icon,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(32.dp) // Bigger icons
+                    modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
@@ -239,7 +250,7 @@ private fun DebugWeatherSection(
     onDebugTempChange: (Double) -> Unit
 ) {
     Surface(
-        color = Color.Black.copy(alpha = 0.6f), // Increased opacity as requested
+        color = Color.Black.copy(alpha = 0.6f),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {

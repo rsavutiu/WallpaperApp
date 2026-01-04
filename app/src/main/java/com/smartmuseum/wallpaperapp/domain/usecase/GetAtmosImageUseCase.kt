@@ -2,6 +2,7 @@ package com.smartmuseum.wallpaperapp.domain.usecase
 
 import android.content.Context
 import android.location.Geocoder
+import com.google.gson.Gson
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.data.repository.NasaImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.PexelsImageProvider
@@ -12,11 +13,12 @@ import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.model.HourlyForecast
 import com.smartmuseum.wallpaperapp.domain.model.WeatherData
 import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
-import com.smartmuseum.wallpaperapp.domain.repository.ImageProvider
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
@@ -32,7 +34,11 @@ class GetAtmosImageUseCase @Inject constructor(
     private val calendarRepository: CalendarRepository,
     @param:ApplicationContext private val context: Context
 ) {
-    suspend operator fun invoke(lat: Double, lon: Double): Result<AtmosImage> {
+    suspend operator fun invoke(
+        lat: Double,
+        lon: Double,
+        forceRefreshImage: Boolean = false
+    ): Result<AtmosImage> {
         return try {
             val weather = wallpaperRepository.getWeather(lat, lon).getOrThrow()
             val current = weather.current
@@ -56,22 +62,50 @@ class GetAtmosImageUseCase @Inject constructor(
 
             val useLocation: Boolean = userPreferencesRepository.useLocation.first()
             val locationName: String? = getCityName(lat, lon)
+            val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
+            val events = if (isCalendarEnabled) {
+                calendarRepository.getTodaysEvents()
+            } else null
+
+            // Check if we already have an image and shouldn't refresh it
+            val rawFile = File(context.filesDir, "atmos_raw.png")
+            val metadataFile = File(context.filesDir, "atmos_metadata.json")
+
+            if (!forceRefreshImage && rawFile.exists() && metadataFile.exists()) {
+                try {
+                    val json = metadataFile.readText()
+                    val cachedImage = Gson().fromJson(json, AtmosImage::class.java)
+                    if (cachedImage != null) {
+                        return Result.success(
+                            cachedImage.copy(
+                                weather = weatherData,
+                                locationName = locationName,
+                                calendarEvents = events
+                            )
+                        )
+                    }
+                } catch (_: Exception) {
+                    // Fallback to fetching a new image if cache is corrupted
+                }
+            }
+
+            // If we reach here, we need to fetch a NEW image (either forced or none exists)
             val preferredProviderName: String =
                 userPreferencesRepository.preferredImageProvider.first()
-            val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
 
-            // Always use NASA at night
-            val provider: ImageProvider = if (!isDay) nasaProvider else
+            val (primaryProvider, fallbackProvider) = if (!isDay) {
+                nasaProvider to unsplashProvider
+            } else {
                 when (preferredProviderName) {
-                    "Pixabay" -> pixabayProvider
-                    "Pexels" -> pexelsProvider
-                    "NASA" -> nasaProvider
-                    "SourceSplash" -> sourceSplashProvider
-                    else -> unsplashProvider
+                    "Pixabay" -> pixabayProvider to unsplashProvider
+                    "Pexels" -> pexelsProvider to unsplashProvider
+                    "NASA" -> nasaProvider to unsplashProvider
+                    "SourceSplash" -> sourceSplashProvider to unsplashProvider
+                    else -> unsplashProvider to pixabayProvider
                 }
+            }
 
             val query = if (!isDay) {
-                // If it's night and not too cloudy, search for the current moon phase
                 if (current.cloud_cover < 30) {
                     getMoonPhaseQuery()
                 } else {
@@ -86,15 +120,17 @@ class GetAtmosImageUseCase @Inject constructor(
                 }
             }
 
-            // If user enabled "Use Location for Wallpapers", we use the city name to narrow down the search
             val locationQuery: String? = if (useLocation && isDay) locationName else null
 
-            val atmosImageResult = provider.fetchImage(query = query, location = locationQuery)
-            val atmosImage = atmosImageResult.getOrThrow()
+            val atmosImageResult = withTimeoutOrNull(10_000L) {
+                primaryProvider.fetchImage(query = query, location = locationQuery)
+            }
 
-            val events = if (isCalendarEnabled) {
-                calendarRepository.getTodaysEvents()
-            } else null
+            val atmosImage = if (atmosImageResult?.isSuccess == true) {
+                atmosImageResult.getOrThrow()
+            } else {
+                fallbackProvider.fetchImage(query = query, location = locationQuery).getOrThrow()
+            }
 
             Result.success(
                 atmosImage.copy(
@@ -114,7 +150,6 @@ class GetAtmosImageUseCase @Inject constructor(
         val month = calendar.get(Calendar.MONTH) + 1
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-        // Simple moon phase approximation
         val jd = if (month < 3) {
             val y = year - 1
             val m = month + 12

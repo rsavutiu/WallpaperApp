@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         if (isTV) {
-            viewModel.triggerUpdate(immediate = true)
+            viewModel.triggerUpdate(openWallpaperPreview = true)
         }
 
         setContent {
@@ -74,8 +74,10 @@ class MainActivity : ComponentActivity() {
                 setCalendarEnabled = { viewModel.setCalendarEnabled(it) },
                 toggleUseLocation = { viewModel.toggleUseLocation() },
                 toggleTemperatureUnit = { viewModel.toggleTemperatureUnit() },
-                triggerUpdate = { viewModel.triggerUpdate(it) },
+                triggerUpdate = { viewModel.triggerLiveWallpaper() },
                 updateRefreshPeriod = { viewModel.updateRefreshPeriod(it) },
+                setDebugTemperature = { viewModel.setDebugTemperature(it) },
+                setDebugWeatherCode = { viewModel.setDebugWeatherCode(it) },
                 isTV = isTV
             )
         }

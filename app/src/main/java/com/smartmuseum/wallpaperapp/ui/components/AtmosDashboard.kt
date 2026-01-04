@@ -1,6 +1,7 @@
 package com.smartmuseum.wallpaperapp.ui.components
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -60,6 +61,11 @@ fun AtmosDashboard(
     forceTemp: Double? = null,
     forceIntensity: Float? = null
 ) {
+    Log.d(
+        "AtmosDashboard",
+        "Dashboard Recomposing: Image=${atmosImage != null}, Bitmap=${currentWallpaper != null}"
+    )
+    
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -69,9 +75,10 @@ fun AtmosDashboard(
         WallpaperBackground(currentWallpaper)
 
         // Weather Effects Layer (AGSL/Shaders)
-        val displayWeatherCode = forceWeatherCode ?: atmosImage?.weather?.weatherCode ?: -1
-        val temperature = forceTemp ?: atmosImage?.weather?.currentTemp ?: 20.0
-        val precipitation = atmosImage?.weather?.precipitation ?: 0.0
+        val weatherData = atmosImage?.weather
+        val displayWeatherCode = forceWeatherCode ?: weatherData?.weatherCode ?: -1
+        val temperature = forceTemp ?: weatherData?.currentTemp ?: 20.0
+        val precipitation = weatherData?.precipitation ?: 0.0
         
         WeatherEffects(
             weatherCode = displayWeatherCode,
@@ -118,9 +125,14 @@ private fun WallpaperBackground(bitmap: Bitmap?) {
             contentScale = ContentScale.Crop
         )
     } else {
+        // Fallback background to avoid broken/grey screen
         Box(modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F172A))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF0F172A), Color(0xFF1E293B))
+                )
+            )
         )
     }
 }
@@ -400,33 +412,37 @@ fun CalendarEventItem(event: CalendarEvent) {
 
 @Composable
 fun WeatherIcon(code: Int, isDay: Boolean, modifier: Modifier = Modifier) {
-    val iconRes = when (code) {
-        0 -> if (isDay) R.drawable.ic_sunny else R.drawable.ic_clear_night
-        1, 2, 3 -> if (isDay) R.drawable.outline_partly_cloudy_day_24 else R.drawable.outline_partly_cloudy_night_24
-        45, 48 -> R.drawable.outline_foggy_24
-        51, 53, 55 -> R.drawable.outline_rainy_light_24
-        56, 57 -> R.drawable.outline_weather_mix_24
-        61, 63 -> R.drawable.outline_rainy_24
-        65 -> R.drawable.outline_rainy_heavy_24
-        66, 67 -> R.drawable.outline_rainy_snow_24
-        71, 73 -> R.drawable.outline_weather_snowy_24
-        75 -> R.drawable.outline_snowing_heavy_24
-        77 -> R.drawable.outline_snowing_24
-        80, 81 -> R.drawable.outline_rainy_24
-        82 -> R.drawable.outline_rainy_heavy_24
-        85 -> if (isDay) R.drawable.outline_sunny_snowing_24 else R.drawable.outline_snowing_24
-        86 -> R.drawable.outline_snowing_heavy_24
-        95 -> R.drawable.outline_thunderstorm_24
-        96, 99 -> R.drawable.outline_weather_hail_24
-        else -> if (isDay) R.drawable.outline_partly_cloudy_day_24 else R.drawable.outline_partly_cloudy_night_24
+    val safeDefault = R.drawable.outline_partly_cloudy_day_24
+
+    val iconRes = try {
+        when (code) {
+            0 -> if (isDay) R.drawable.ic_sunny else R.drawable.ic_clear_night
+            1, 2, 3 -> if (isDay) R.drawable.outline_partly_cloudy_day_24 else R.drawable.outline_partly_cloudy_night_24
+            45, 48 -> R.drawable.outline_foggy_24
+            51, 53, 55 -> R.drawable.outline_rainy_light_24
+            56, 57 -> R.drawable.outline_weather_mix_24
+            61, 63 -> R.drawable.outline_rainy_24
+            65 -> R.drawable.outline_rainy_heavy_24
+            66, 67 -> R.drawable.outline_rainy_snow_24
+            71, 73 -> R.drawable.outline_weather_snowy_24
+            75 -> R.drawable.outline_snowing_heavy_24
+            77 -> R.drawable.outline_snowing_24
+            80, 81 -> R.drawable.outline_rainy_24
+            82 -> R.drawable.outline_rainy_heavy_24
+            85 -> if (isDay) R.drawable.outline_sunny_snowing_24 else R.drawable.outline_snowing_24
+            86 -> R.drawable.outline_snowing_heavy_24
+            95 -> R.drawable.outline_thunderstorm_24
+            96, 99 -> R.drawable.outline_weather_hail_24
+            else -> if (isDay) R.drawable.outline_partly_cloudy_day_24 else R.drawable.outline_partly_cloudy_night_24
+        }
+    } catch (_: Exception) {
+        safeDefault
     }
 
-    if (iconRes != 0) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = null,
-            tint = Color.White,
-            modifier = modifier
-        )
-    }
+    Icon(
+        painter = painterResource(id = if (iconRes != 0) iconRes else safeDefault),
+        contentDescription = null,
+        tint = Color.White,
+        modifier = modifier
+    )
 }

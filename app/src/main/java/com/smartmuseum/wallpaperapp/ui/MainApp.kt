@@ -24,9 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,10 +48,10 @@ fun MainApp(
     toggleTemperatureUnit: () -> Unit,
     updateRefreshPeriod: (Long) -> Unit,
     triggerUpdate: (Boolean) -> Unit,
+    setDebugWeatherCode: (Int?) -> Unit,
+    setDebugTemperature: (Double) -> Unit,
     isTV: Boolean = false
 ) {
-    var debugWeatherCode by remember { mutableStateOf<Int?>(null) }
-    var debugTemp by remember { mutableDoubleStateOf(20.0) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -123,8 +121,8 @@ fun MainApp(
                     isCelsius = uiState.isCelsius,
                     isCalendarEnabled = uiState.isCalendarEnabled,
                     onToggleUnit = { toggleTemperatureUnit() },
-                    forceWeatherCode = debugWeatherCode,
-                    forceTemp = if (debugWeatherCode != null) debugTemp else null
+                    forceWeatherCode = uiState.debugWeatherCode,
+                    forceTemp = if (uiState.debugWeatherCode != null) uiState.debugTemperature else null
                 )
 
                 if (!isTV) {
@@ -159,10 +157,10 @@ fun MainApp(
                                         updateRefreshPeriod(minutes)
                                     },
                                     onRunUpdate = { triggerUpdate(true) },
-                                    onDebugWeatherChange = { debugWeatherCode = it },
-                                    debugWeatherCode = debugWeatherCode,
-                                    debugTemp = debugTemp,
-                                    onDebugTempChange = { debugTemp = it }
+                                    onDebugWeatherChange = { setDebugWeatherCode(it) },
+                                    debugWeatherCode = uiState.debugWeatherCode,
+                                    debugTemp = uiState.debugTemperature,
+                                    onDebugTempChange = { setDebugTemperature(it) }
                                 )
                             }
                         }
@@ -174,8 +172,6 @@ fun MainApp(
                                     .align(Alignment.BottomCenter)
                                     .padding(bottom = 16.dp)
                             ) {
-                                // "Shimmer" logic: If progress is at 0, 0.33, or 0.66, it means a new phase just started
-                                // so we show the indeterminate (shimmering) bar. Otherwise, we show the static progress reached.
                                 val isPhasing =
                                     uiState.loadingProgress % 0.33f == 0f && uiState.loadingProgress < 1.0f
 

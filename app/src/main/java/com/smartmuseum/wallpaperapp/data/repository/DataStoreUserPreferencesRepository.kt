@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -33,6 +34,8 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val PREFERRED_PROVIDER = stringPreferencesKey("preferred_provider")
         val IS_CALENDAR_ENABLED = booleanPreferencesKey("is_calendar_enabled")
         val USE_LOCATION = booleanPreferencesKey("use_location")
+        val FORCED_WEATHER_CODE = intPreferencesKey("forced_weather_code")
+        val FORCED_TEMPERATURE = doublePreferencesKey("forced_temperature")
     }
 
     override val isCelsius: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -107,6 +110,28 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     override suspend fun setRefreshPeriod(minutes: Long) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.REFRESH_PERIOD] = minutes
+        }
+    }
+
+    override val forcedWeatherCode: Flow<Int?> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.FORCED_WEATHER_CODE]
+    }
+
+    override suspend fun setForcedWeatherCode(code: Int?) {
+        context.dataStore.edit { preferences ->
+            if (code == null) preferences.remove(PreferencesKeys.FORCED_WEATHER_CODE)
+            else preferences[PreferencesKeys.FORCED_WEATHER_CODE] = code
+        }
+    }
+
+    override val forcedTemperature: Flow<Double?> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.FORCED_TEMPERATURE]
+    }
+
+    override suspend fun setForcedTemperature(temp: Double?) {
+        context.dataStore.edit { preferences ->
+            if (temp == null) preferences.remove(PreferencesKeys.FORCED_TEMPERATURE)
+            else preferences[PreferencesKeys.FORCED_TEMPERATURE] = temp
         }
     }
 }
