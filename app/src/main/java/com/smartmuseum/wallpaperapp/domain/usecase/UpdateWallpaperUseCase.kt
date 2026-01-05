@@ -1,14 +1,11 @@
 package com.smartmuseum.wallpaperapp.domain.usecase
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
-import com.google.gson.Gson
-import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
 import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -22,7 +19,8 @@ import javax.inject.Inject
  * No longer sets the system static wallpaper directly.
  */
 class UpdateWallpaperUseCase @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val saveWallpaperUseCase: SaveWallpaperUseCase
 ) {
     suspend operator fun invoke(atmosImage: AtmosImage, useCache: Boolean = false): Boolean =
         withContext(Dispatchers.IO) {
@@ -48,31 +46,15 @@ class UpdateWallpaperUseCase @Inject constructor(
 
                 val result = loader.execute(request)
                 if (result is SuccessResult) {
-                    val downloaded = result.drawable.toBitmap()
-                    // Save the CLEAN original image
-                    saveBitmapLocally(downloaded, RAW_IMAGE_FILE)
-                    downloaded
+                    result.drawable.toBitmap()
                 } else null
             }
 
             if (originalBitmap != null) {
                 // 2. Save metadata and trigger update signal
-                saveMetadataLocally(atmosImage)
+                saveWallpaperUseCase(atmosImage, originalBitmap)
                 return@withContext true
             }
             false
         }
-
-    private fun saveBitmapLocally(bitmap: Bitmap, fileName: String) {
-        context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it)
-        }
-    }
-
-    private fun saveMetadataLocally(atmosImage: AtmosImage) {
-        val json = Gson().toJson(atmosImage)
-        context.openFileOutput(METADATA_FILE, Context.MODE_PRIVATE).use {
-            it.write(json.toByteArray())
-        }
-    }
 }
