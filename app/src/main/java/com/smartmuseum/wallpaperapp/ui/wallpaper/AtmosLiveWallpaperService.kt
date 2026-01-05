@@ -1,6 +1,5 @@
 package com.smartmuseum.wallpaperapp.ui.wallpaper
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
@@ -287,25 +286,25 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
                 launch {
                     userPreferencesRepository.isCelsius.collect {
-                        isCelsius = it 
+                        isCelsius = it
                         drawFrame()
                     }
                 }
                 launch {
                     userPreferencesRepository.isCalendarEnabled.collect {
-                        isCalendarEnabled = it 
+                        isCalendarEnabled = it
                         drawFrame()
                     }
                 }
                 launch {
-                    userPreferencesRepository.forcedWeatherCode.collect { 
+                    userPreferencesRepository.forcedWeatherCode.collect {
                         forcedWeatherCode = it
                         updateWeatherShader()
                         drawFrame()
                     }
                 }
                 launch {
-                    userPreferencesRepository.forcedTemperature.collect { 
+                    userPreferencesRepository.forcedTemperature.collect {
                         forcedTemperature = it
                         updateWeatherShader()
                         drawFrame()
@@ -335,7 +334,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
                 try {
                     val rawFile = File(filesDir, RAW_IMAGE_FILE)
                     val metadataFile = File(filesDir, METADATA_FILE)
-                    
+
                     if (rawFile.exists() && rawFile.length() > 0) {
                         val loadedBitmap = BitmapFactory.decodeFile(rawFile.absolutePath)
                         if (loadedBitmap != null) {
@@ -498,7 +497,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
                     val dst = RectF(
                         -60f + gyroOffsetX * gyroScale,
                         -60f + gyroOffsetY * gyroScale,
-                        width + 60f + gyroOffsetX * gyroScale, 
+                        width + 60f + gyroOffsetX * gyroScale,
                         height + 60f + gyroOffsetY * gyroScale
                     )
                     canvas.drawBitmap(bmp, src, dst.toRect(), null)
@@ -545,7 +544,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         private fun drawDashboardContent(canvas: Canvas, width: Float, height: Float) {
             val margin = width * 0.08f
-            var currentY = height * 0.08f 
+            var currentY = height * 0.08f
 
             val textPaint = Paint().apply {
                 color = Color.WHITE
@@ -591,7 +590,7 @@ class AtmosLiveWallpaperService : WallpaperService() {
                     height * 0.05f,
                     Color.WHITE
                 )
-                
+
                 currentY += height * 0.09f
 
                 textPaint.textSize = height * 0.03f
