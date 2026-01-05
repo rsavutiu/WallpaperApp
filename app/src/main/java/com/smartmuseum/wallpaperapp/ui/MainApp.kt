@@ -3,6 +3,7 @@ package com.smartmuseum.wallpaperapp.ui
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,9 +12,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.ui.components.AtmosDashboard
@@ -77,33 +85,65 @@ fun MainApp(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
                 if (!isTV) {
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(
-                            alpha = 0.8f
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
                     ) {
-                        NavigationBarItem(
-                            selected = selectedTab == 0,
-                            onClick = { selectedTab = 0 },
-                            icon = {
-                                Icon(
-                                    Icons.Default.Image,
-                                    contentDescription = null
-                                )
-                            },
-                            label = { Text(stringResource(R.string.tab_wallpaper)) }
-                        )
-                        NavigationBarItem(
-                            selected = selectedTab == 1,
-                            onClick = { selectedTab = 1 },
-                            icon = {
-                                Icon(
-                                    Icons.Default.Settings,
-                                    contentDescription = null
-                                )
-                            },
-                            label = { Text(stringResource(R.string.tab_setup)) }
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Big Run Button placed globally above the navigation bar
+                        Button(
+                            onClick = { triggerUpdate(true) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .height(40.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                                    alpha = 0.9f
+                                ),
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                stringResource(R.string.run),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        NavigationBar(
+                            containerColor = Color.Transparent, // Transparent to use Column's background
+                            tonalElevation = 0.dp
+                        ) {
+                            NavigationBarItem(
+                                selected = selectedTab == 0,
+                                onClick = { selectedTab = 0 },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Image,
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text(stringResource(R.string.tab_wallpaper)) }
+                            )
+                            NavigationBarItem(
+                                selected = selectedTab == 1,
+                                onClick = { selectedTab = 1 },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Settings,
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text(stringResource(R.string.tab_setup)) }
+                            )
+                        }
                     }
                 }
             }

@@ -30,6 +30,16 @@ android {
         buildConfigField("String", "UNSPLASH_ACCESS_KEY", "\"${localProperties.getProperty("UNSPLASH_ACCESS_KEY") ?: ""}\"")
         buildConfigField("String", "PIXABAY_API_KEY", "\"${localProperties.getProperty("PIXABAY_API_KEY") ?: ""}\"")
         buildConfigField("String", "PEXELS_API_KEY", "\"${localProperties.getProperty("PEXELS_API_KEY") ?: ""}\"")
+        buildConfigField(
+            "String",
+            "OPENWEATHER_API_KEY",
+            "\"${localProperties.getProperty("OPENWEATHER_API_KEY") ?: ""}\""
+        )
+        buildConfigField(
+            "String",
+            "WEATHERSTACK_API_KEY",
+            "\"${localProperties.getProperty("WEATHERSTACK_API_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {

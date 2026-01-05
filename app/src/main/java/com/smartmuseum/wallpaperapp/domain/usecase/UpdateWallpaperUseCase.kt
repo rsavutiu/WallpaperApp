@@ -18,61 +18,76 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * Repurposed to fetch and cache Atmos data for the Live Wallpaper.
- * No longer sets the system static wallpaper directly.
+ * SOLID Refactored Use Case: Responsible for caching image assets and metadata.
+ * Delegates storage concerns to private specialized methods and uses Hilt for DI.
  */
 class UpdateWallpaperUseCase @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
+    /**
+     * Executes the caching operation.
+     * @param atmosImage The metadata associated with the scenery.
+     * @param useCache If true, re-uses existing local storage instead of performing network I/O.
+     */
     suspend operator fun invoke(atmosImage: AtmosImage, useCache: Boolean = false): Boolean =
         withContext(Dispatchers.IO) {
-            val loader = ImageLoader(context)
-
-            // 1. Get the original bitmap (from cache or network)
-            val bitmapToProcess = if (useCache) {
-                val rawFile = File(context.filesDir, RAW_IMAGE_FILE)
-                if (rawFile.exists()) {
-                    try {
-                        BitmapFactory.decodeFile(rawFile.absolutePath)
-                    } catch (e: Exception) {
-                        null
-                    }
-                } else null
-            } else null
-
-            val originalBitmap = bitmapToProcess ?: run {
-                val request = ImageRequest.Builder(context)
-                    .data(atmosImage.url)
-                    .allowHardware(false)
-                    .build()
-
-                val result = loader.execute(request)
-                if (result is SuccessResult) {
-                    val downloaded = result.drawable.toBitmap()
-                    // Save the CLEAN original image
-                    saveBitmapLocally(downloaded, RAW_IMAGE_FILE)
-                    downloaded
-                } else null
+            val originalBitmap = if (useCache) {
+                tryLoadLocalBitmap()
+            } else {
+                downloadAndSaveBitmap(atmosImage.url)
             }
 
             if (originalBitmap != null) {
-                // 2. Save metadata and trigger update signal
-                saveMetadataLocally(atmosImage)
+                persistState(atmosImage)
                 return@withContext true
             }
             false
         }
 
-    private fun saveBitmapLocally(bitmap: Bitmap, fileName: String) {
-        context.openFileOutput(fileName, Context.MODE_PRIVATE).use {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it)
+    private fun tryLoadLocalBitmap(): Bitmap? {
+        val file = File(context.filesDir, RAW_IMAGE_FILE)
+        return if (file.exists()) {
+            try {
+                BitmapFactory.decodeFile(file.absolutePath)
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
+    private suspend fun downloadAndSaveBitmap(url: String): Bitmap? {
+        val loader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false)
+            .build()
+
+        val result = loader.execute(request)
+        return if (result is SuccessResult) {
+            val bitmap = result.drawable.toBitmap()
+            saveBitmapLocally(bitmap)
+            bitmap
+        } else null
+    }
+
+    private fun saveBitmapLocally(bitmap: Bitmap) {
+        try {
+            context.openFileOutput(RAW_IMAGE_FILE, Context.MODE_PRIVATE).use {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    private fun saveMetadataLocally(atmosImage: AtmosImage) {
-        val json = Gson().toJson(atmosImage)
-        context.openFileOutput(METADATA_FILE, Context.MODE_PRIVATE).use {
-            it.write(json.toByteArray())
+    private fun persistState(atmosImage: AtmosImage) {
+        try {
+            val json = Gson().toJson(atmosImage)
+            context.openFileOutput(METADATA_FILE, Context.MODE_PRIVATE).use {
+                it.write(json.toByteArray())
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }
