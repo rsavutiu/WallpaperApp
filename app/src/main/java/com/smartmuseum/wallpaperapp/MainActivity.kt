@@ -78,6 +78,7 @@ class MainActivity : ComponentActivity() {
                 updateRefreshPeriod = { viewModel.updateRefreshPeriod(it) },
                 setDebugTemperature = { viewModel.setDebugTemperature(it) },
                 setDebugWeatherCode = { viewModel.setDebugWeatherCode(it) },
+                setDynamicWallpaperEnabled = { viewModel.setDynamicWallpaperEnabled(it) },
                 isTV = isTV
             )
         }

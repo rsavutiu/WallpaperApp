@@ -410,10 +410,8 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
-                // event.values[1] is roll (left/right tilt)
-                // event.values[0] is pitch (forward/back tilt)
-                val rawX = event.values[0] * 120f
-                val rawY = event.values[1] * 100f
+                val rawX = event.values[1] * 120f
+                val rawY = event.values[0] * 100f
 
                 if (abs(rawX - smoothedGyroX) > deadZone * 50f) {
                     smoothedGyroX += (rawX - smoothedGyroX) * smoothingFactor

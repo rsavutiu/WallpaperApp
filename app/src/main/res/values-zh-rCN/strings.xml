@@ -4,6 +4,15 @@
     <string name="query_sunny">晴天风景</string>
     <string name="query_rainy">雨天风景</string>
     <string name="query_snowy">雪天风景</string>
+    <string name="query_night_sky">夜空星星星云</string>
+    <string name="moon_phase_new_moon">新月</string>
+    <string name="moon_phase_waxing_crescent">娥眉月</string>
+    <string name="moon_phase_first_quarter">上弦月</string>
+    <string name="moon_phase_waxing_gibbous">盈凸月</string>
+    <string name="moon_phase_full_moon">满月</string>
+    <string name="moon_phase_waning_gibbous">亏凸月</string>
+    <string name="moon_phase_last_quarter">下弦月</string>
+    <string name="moon_phase_waning_crescent">残月</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

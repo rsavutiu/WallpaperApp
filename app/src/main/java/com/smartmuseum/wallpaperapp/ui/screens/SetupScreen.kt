@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
@@ -52,6 +53,7 @@ fun SetupScreen(
     toggleUseLocation: () -> Unit,
     toggleTemperatureUnit: () -> Unit,
     setCalendarEnabled: (Boolean) -> Unit,
+    setDynamicWallpaperEnabled: (Boolean) -> Unit,
     onRunUpdate: () -> Unit,
     onDebugWeatherChange: (Int?) -> Unit,
     updateRefreshPeriod: (Long) -> Unit,
@@ -116,6 +118,18 @@ fun SetupScreen(
             Switch(
                 checked = uiState.isCalendarEnabled,
                 onCheckedChange = setCalendarEnabled
+            )
+        }
+
+        // Dynamic Wallpaper Row
+        SetupRow(
+            icon = Icons.Default.AutoAwesome,
+            label = "Dynamic Wallpaper",
+            onClick = { setDynamicWallpaperEnabled(!uiState.isDynamicWallpaperEnabled) }
+        ) {
+            Switch(
+                checked = uiState.isDynamicWallpaperEnabled,
+                onCheckedChange = setDynamicWallpaperEnabled
             )
         }
 

@@ -58,6 +58,7 @@ fun MainApp(
     triggerUpdate: (Boolean) -> Unit,
     setDebugWeatherCode: (Int?) -> Unit,
     setDebugTemperature: (Double?) -> Unit,
+    setDynamicWallpaperEnabled: (Boolean) -> Unit,
     isTV: Boolean = false
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -200,7 +201,8 @@ fun MainApp(
                                     onDebugWeatherChange = { setDebugWeatherCode(it) },
                                     debugWeatherCode = uiState.debugWeatherCode,
                                     debugTemp = uiState.debugTemperature,
-                                    onDebugTempChange = { setDebugTemperature(it) }
+                                    onDebugTempChange = { setDebugTemperature(it) },
+                                    setDynamicWallpaperEnabled = { setDynamicWallpaperEnabled(it) }
                                 )
                             }
                         }

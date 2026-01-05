@@ -4,6 +4,15 @@
     <string name="query_sunny">Slnečné krajiny</string>
     <string name="query_rainy">Daždivé krajiny</string>
     <string name="query_snowy">Zasnežené krajiny</string>
+    <string name="query_night_sky">nočná obloha hviezdy hmlovina</string>
+    <string name="moon_phase_new_moon">nov</string>
+    <string name="moon_phase_waxing_crescent">pribúdajúci polmesiac</string>
+    <string name="moon_phase_first_quarter">prvá štvrť</string>
+    <string name="moon_phase_waxing_gibbous">pribúdajúci mesiac</string>
+    <string name="moon_phase_full_moon">spln</string>
+    <string name="moon_phase_waning_gibbous">ubúdajúci mesiac</string>
+    <string name="moon_phase_last_quarter">posledná štvrť</string>
+    <string name="moon_phase_waning_crescent">ubúdajúci polmesiac</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

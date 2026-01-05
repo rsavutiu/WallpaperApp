@@ -4,6 +4,15 @@
     <string name="query_sunny">வெயில் நிலப்பரப்புகள்</string>
     <string name="query_rainy">மழைக்கால நிலப்பரப்புகள்</string>
     <string name="query_snowy">பனி நிலப்பரப்புகள்</string>
+    <string name="query_night_sky">இரவு வானம் நட்சத்திரங்கள் நெபுலா</string>
+    <string name="moon_phase_new_moon">அமாவாசை</string>
+    <string name="moon_phase_waxing_crescent">வளர்பிறை</string>
+    <string name="moon_phase_first_quarter">முதல் கால்</string>
+    <string name="moon_phase_waxing_gibbous">வளர்பிறை</string>
+    <string name="moon_phase_full_moon">பௌர்ணமி</string>
+    <string name="moon_phase_waning_gibbous">தேய்பிறை</string>
+    <string name="moon_phase_last_quarter">கடைசி கால்</string>
+    <string name="moon_phase_waning_crescent">தேய்பிறை</string>
     <string name="attribution_unsplash">அன்ஸ்லாஷ் / %s</string>
     <string name="attribution_nasa">நாசா/ஜேபிஎல்</string>
     <string name="attribution_nasa_with_copyright">நாசா / %s</string>

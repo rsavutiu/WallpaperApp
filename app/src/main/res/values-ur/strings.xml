@@ -4,6 +4,15 @@
     <string name="query_sunny">دھوپ والے مناظر</string>
     <string name="query_rainy">برساتی مناظر</string>
     <string name="query_snowy">برفانی مناظر</string>
+    <string name="query_night_sky">رات کا آسمان ستارے نیبولا</string>
+    <string name="moon_phase_new_moon">نیا چاند</string>
+    <string name="moon_phase_waxing_crescent">بڑھتا ہوا ہلال</string>
+    <string name="moon_phase_first_quarter">پہلی سہ ماہی</string>
+    <string name="moon_phase_waxing_gibbous">بڑھتا ہوا گبس</string>
+    <string name="moon_phase_full_moon">پورا چاند</string>
+    <string name="moon_phase_waning_gibbous">گھٹتا ہوا گبس</string>
+    <string name="moon_phase_last_quarter">آخری سہ ماہی</string>
+    <string name="moon_phase_waning_crescent">گھٹتا ہوا ہلال</string>
     <string name="attribution_unsplash">ان سپلیش / %s</string>
     <string name="attribution_nasa">ناسا/جے پی ایل</string>
     <string name="attribution_nasa_with_copyright">ناسا / %s</string>

@@ -28,6 +28,8 @@ import com.smartmuseum.wallpaperapp.data.repository.PixabayImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.UnsplashImageProvider
 import com.smartmuseum.wallpaperapp.domain.location.LocationTracker
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
+import com.smartmuseum.wallpaperapp.domain.model.HourlyForecast
+import com.smartmuseum.wallpaperapp.domain.model.WeatherData
 import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
@@ -76,6 +78,7 @@ data class MainUiState(
     val preferredProvider: String = "Unsplash",
     val useLocation: Boolean = false,
     val isCalendarEnabled: Boolean = false,
+    val isDynamicWallpaperEnabled: Boolean = false,
     val customColorScheme: ColorScheme? = null,
     val providerImages: List<ProviderImages> = emptyList(),
     val isFetchingImages: Boolean = false,
@@ -136,6 +139,11 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            userPreferencesRepository.isDynamicWallpaperEnabled.collect { enabled ->
+                _uiState.update { it.copy(isDynamicWallpaperEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
             userPreferencesRepository.refreshPeriodInMinutes.collect { period ->
                 _uiState.update { it.copy(refreshPeriodInMinutes = period) }
             }
@@ -169,6 +177,12 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferencesRepository.setRefreshPeriod(minutes)
             triggerUpdate(openWallpaperPreview = false)
+        }
+    }
+
+    fun setDynamicWallpaperEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setDynamicWallpaperEnabled(enabled)
         }
     }
 
@@ -457,7 +471,7 @@ class MainViewModel @Inject constructor(
                 val weatherData = weatherResult.getOrNull()?.let { weather ->
                     val current = weather.current
                     val isDay = current.is_day == 1
-                    com.smartmuseum.wallpaperapp.domain.model.WeatherData(
+                    WeatherData(
                         currentTemp = current.temperature_2m,
                         condition = getWeatherCondition(current.weather_code),
                         weatherCode = current.weather_code,
@@ -465,13 +479,17 @@ class MainViewModel @Inject constructor(
                         humidity = current.relative_humidity_2m,
                         precipitation = current.precipitation,
                         hourlyForecast = weather.hourly.time.mapIndexed { index, time ->
-                            com.smartmuseum.wallpaperapp.domain.model.HourlyForecast(
+                            HourlyForecast(
                                 time = time,
                                 temp = weather.hourly.temperature_2m[index],
                                 precipitationProb = weather.hourly.precipitation_probability[index],
                                 weatherCode = weather.hourly.weather_code[index]
                             )
-                        }.take(12)
+                        }.take(12),
+                        snowfall = 0.0,
+                        rain = 0.0,
+                        showers = 0.0,
+                        cloudCover = 0
                     )
                 }
 

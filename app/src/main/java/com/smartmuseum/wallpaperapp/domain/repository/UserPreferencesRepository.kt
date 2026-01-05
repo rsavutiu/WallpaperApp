@@ -21,6 +21,9 @@ interface UserPreferencesRepository {
     val refreshPeriodInMinutes: Flow<Long>
     suspend fun setRefreshPeriod(minutes: Long)
 
+    val isDynamicWallpaperEnabled: Flow<Boolean>
+    suspend fun setDynamicWallpaperEnabled(enabled: Boolean)
+
     // Debug forced weather options
     val forcedWeatherCode: Flow<Int?>
     suspend fun setForcedWeatherCode(code: Int?)

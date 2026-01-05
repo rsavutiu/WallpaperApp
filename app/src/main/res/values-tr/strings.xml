@@ -4,6 +4,15 @@
     <string name="query_sunny">Güneşli Manzaralar</string>
     <string name="query_rainy">Yağmurlu Manzaralar</string>
     <string name="query_snowy">Karlı Manzaralar</string>
+    <string name="query_night_sky">gece gökyüzü yıldızlar bulutsu</string>
+    <string name="moon_phase_new_moon">yeni ay</string>
+    <string name="moon_phase_waxing_crescent">büyüyen hilal</string>
+    <string name="moon_phase_first_quarter">ilk dördün</string>
+    <string name="moon_phase_waxing_gibbous">büyüyen kambur ay</string>
+    <string name="moon_phase_full_moon">dolunay</string>
+    <string name="moon_phase_waning_gibbous">küçülen kambur ay</string>
+    <string name="moon_phase_last_quarter">son dördün</string>
+    <string name="moon_phase_waning_crescent">küçülen hilal</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

@@ -33,6 +33,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val PREFERRED_PROVIDER = stringPreferencesKey("preferred_provider")
         val IS_CALENDAR_ENABLED = booleanPreferencesKey("is_calendar_enabled")
         val USE_LOCATION = booleanPreferencesKey("use_location")
+        val IS_DYNAMIC_WALLPAPER_ENABLED = booleanPreferencesKey("is_dynamic_wallpaper_enabled")
         val FORCED_WEATHER_CODE = intPreferencesKey("forced_weather_code")
         val FORCED_TEMPERATURE = doublePreferencesKey("forced_temperature")
     }
@@ -109,6 +110,17 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     override suspend fun setRefreshPeriod(minutes: Long) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.REFRESH_PERIOD] = minutes
+        }
+    }
+
+    override val isDynamicWallpaperEnabled: Flow<Boolean> =
+        context.dataStore.data.map { preferences ->
+            preferences[PreferencesKeys.IS_DYNAMIC_WALLPAPER_ENABLED] ?: false
+        }
+
+    override suspend fun setDynamicWallpaperEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.IS_DYNAMIC_WALLPAPER_ENABLED] = enabled
         }
     }
 

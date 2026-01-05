@@ -4,6 +4,15 @@
     <string name="query_sunny">Maaraw na mga Landscape</string>
     <string name="query_rainy">Maulan na mga Landscape</string>
     <string name="query_snowy">Nagniniyebe na mga Landscape</string>
+    <string name="query_night_sky">kalangitan sa gabi mga bituin nebula</string>
+    <string name="moon_phase_new_moon">bagong buwan</string>
+    <string name="moon_phase_waxing_crescent">papalaking gasuklay</string>
+    <string name="moon_phase_first_quarter">unang kapat</string>
+    <string name="moon_phase_waxing_gibbous">papalaking gibbous</string>
+    <string name="moon_phase_full_moon">kabilugan ng buwan</string>
+    <string name="moon_phase_waning_gibbous">papaliit na gibbous</string>
+    <string name="moon_phase_last_quarter">huling kapat</string>
+    <string name="moon_phase_waning_crescent">papaliit na gasuklay</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>
