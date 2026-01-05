@@ -4,6 +4,15 @@
     <string name="query_sunny">ఎండ ప్రకృతి దృశ్యాలు</string>
     <string name="query_rainy">వర్షపు ప్రకృతి దృశ్యాలు</string>
     <string name="query_snowy">మంచు ప్రకృతి దృశ్యాలు</string>
+    <string name="query_night_sky">రాత్రి ఆకాశం నక్షత్రాలు నెబ్యులా</string>
+    <string name="moon_phase_new_moon">అమావాస్య</string>
+    <string name="moon_phase_waxing_crescent">పెరుగుతున్న నెలవంక</string>
+    <string name="moon_phase_first_quarter">మొదటి త్రైమాసికం</string>
+    <string name="moon_phase_waxing_gibbous">పెరుగుతున్న గిబ్బస్</string>
+    <string name="moon_phase_full_moon">పౌర్ణమి</string>
+    <string name="moon_phase_waning_gibbous">తగ్గుతున్న గిబ్బస్</string>
+    <string name="moon_phase_last_quarter">చివరి త్రైమాసికం</string>
+    <string name="moon_phase_waning_crescent">తగ్గుతున్న నెలవంక</string>
     <string name="attribution_unsplash">అన్‌స్ప్లాష్ / %s</string>
     <string name="attribution_nasa">నాసా/జెపిఎల్</string>
     <string name="attribution_nasa_with_copyright">నాసా / %s</string>

@@ -4,6 +4,15 @@
     <string name="query_sunny">Cảnh quan nắng</string>
     <string name="query_rainy">Cảnh quan mưa</string>
     <string name="query_snowy">Cảnh quan tuyết</string>
+    <string name="query_night_sky">bầu trời đêm các vì sao tinh vân</string>
+    <string name="moon_phase_new_moon">trăng non</string>
+    <string name="moon_phase_waxing_crescent">trăng lưỡi liềm</string>
+    <string name="moon_phase_first_quarter">trăng thượng huyền</string>
+    <string name="moon_phase_waxing_gibbous">trăng khuyết</string>
+    <string name="moon_phase_full_moon">trăng rằm</string>
+    <string name="moon_phase_waning_gibbous">trăng khuyết</string>
+    <string name="moon_phase_last_quarter">trăng hạ huyền</string>
+    <string name="moon_phase_waning_crescent">trăng lưỡi liềm</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

@@ -24,7 +24,11 @@ data class WeatherData(
     val isDay: Boolean,
     val humidity: Int,
     val precipitation: Double,
-    val hourlyForecast: List<HourlyForecast>
+    val hourlyForecast: List<HourlyForecast>,
+    val snowfall: Double,
+    val rain: Double,
+    val showers: Double,
+    val cloudCover: Int
 )
 
 @Serializable

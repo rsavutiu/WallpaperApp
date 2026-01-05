@@ -4,6 +4,15 @@
     <string name="query_sunny">ทิวทัศน์แดดจัด</string>
     <string name="query_rainy">ทิวทัศน์ฝนตก</string>
     <string name="query_snowy">ทิวทัศน์หิมะตก</string>
+    <string name="query_night_sky">ท้องฟ้ายามค่ำคืน ดวงดาว เนบิวลา</string>
+    <string name="moon_phase_new_moon">เดือนมืด</string>
+    <string name="moon_phase_waxing_crescent">ข้างขึ้น</string>
+    <string name="moon_phase_first_quarter">ไตรมาสแรก</string>
+    <string name="moon_phase_waxing_gibbous">ข้างขึ้น</string>
+    <string name="moon_phase_full_moon">พระจันทร์เต็มดวง</string>
+    <string name="moon_phase_waning_gibbous">ข้างแรม</string>
+    <string name="moon_phase_last_quarter">ไตรมาสสุดท้าย</string>
+    <string name="moon_phase_waning_crescent">ข้างแรม</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>
