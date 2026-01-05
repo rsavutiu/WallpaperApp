@@ -17,27 +17,9 @@ based on real-time weather, location, and your personal schedule.
   screens.
 - **Localization**: Full support for over 15 languages.
 
-## How it Works
-
-The application follows a clean architecture pattern, with the logic separated into three main layers: **Data**, **Domain**, and **UI**.
-
-1.  **UI Layer**: The UI layer is built with Jetpack Compose and is responsible for displaying the wallpaper and the application's settings screens. It observes a `ViewModel` for state changes and user interactions.
-
-2.  **Domain Layer**: The domain layer contains the core business logic of the application. It is composed of several use cases, each with a single responsibility:
-    *   `GetWeatherUseCase`: Fetches the current weather conditions from the repository.
-    *   `GetLocationNameUseCase`: Retrieves the user's current city name.
-    *   `GetImageQueryUseCase`: Generates a search query for the image provider based on the weather and time of day. This use case also uses the `GetMoonPhaseUseCase` to determine the current moon phase for night-time queries.
-    *   `GetAtmosImageUseCase`: Orchestrates the process of fetching the weather, location, and image, and combines them into a single `AtmosImage` object.
-    *   `UpdateWallpaperUseCase`: Downloads the selected image and caches it locally.
-    *   `SaveWallpaperUseCase`: Saves the downloaded image and its metadata to the device's internal storage.
-
-3.  **Data Layer**: The data layer is responsible for fetching data from remote and local sources. It includes repositories for accessing the weather API, image providers, and the user's calendar.
-
-The application uses `WorkManager` to schedule periodic background updates. The `WallpaperWorker` class is responsible for triggering the `GetAtmosImageUseCase` and `UpdateWallpaperUseCase` to refresh the wallpaper at regular intervals.
-
 ## Architecture
 
-- **Clean Architecture**: Separation of concerns into Data, Domain, and UI layers, with a strong emphasis on the Single Responsibility Principle.
+- **Clean Architecture**: Separation of concerns into Data, Domain, and UI layers.
 - **Jetpack Compose**: Modern declarative UI for both mobile and TV.
 - **WorkManager**: Periodic background updates to keep the wallpaper fresh.
 - **Hilt**: Dependency injection for a modular and testable codebase.
