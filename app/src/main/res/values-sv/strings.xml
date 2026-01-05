@@ -4,6 +4,15 @@
     <string name="query_sunny">Soligt landskap</string>
     <string name="query_rainy">Regnigt landskap</string>
     <string name="query_snowy">Snöigt landskap</string>
+    <string name="query_night_sky">natthimlen stjärnor nebulosa</string>
+    <string name="moon_phase_new_moon">nymåne</string>
+    <string name="moon_phase_waxing_crescent">tilltagande halvmåne</string>
+    <string name="moon_phase_first_quarter">första kvarteret</string>
+    <string name="moon_phase_waxing_gibbous">tilltagande måne</string>
+    <string name="moon_phase_full_moon">fullmåne</string>
+    <string name="moon_phase_waning_gibbous">avtagande måne</string>
+    <string name="moon_phase_last_quarter">sista kvarteret</string>
+    <string name="moon_phase_waning_crescent">avtagande halvmåne</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

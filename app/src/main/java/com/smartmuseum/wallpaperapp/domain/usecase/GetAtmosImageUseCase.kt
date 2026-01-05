@@ -64,7 +64,6 @@ class GetAtmosImageUseCase @Inject constructor(
                             locationName = locationName,
                             calendarEvents = events
                         )
-                        updateMetadata(atmosImage = newImage)
                         return Result.success(value = newImage)
                     }
                 } catch (e: Exception) {

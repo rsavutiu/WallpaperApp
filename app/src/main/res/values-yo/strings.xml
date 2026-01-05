@@ -4,6 +4,15 @@
     <string name="query_sunny">Àwọn Ilẹ̀ tí ó ní oòrùn</string>
     <string name="query_rainy">Àwọn Ilẹ̀ tí òjò ti rọ̀</string>
     <string name="query_snowy">Àwọn Ilẹ̀ tí yìnyín ti wà</string>
+    <string name="query_night_sky">ọrun alẹ awọn irawọ nebula</string>
+    <string name="moon_phase_new_moon">oṣupa tuntun</string>
+    <string name="moon_phase_waxing_crescent">oṣupa ti o n dagba</string>
+    <string name="moon_phase_first_quarter">mẹẹdogun akọkọ</string>
+    <string name="moon_phase_waxing_gibbous">oṣupa ti o n dagba</string>
+    <string name="moon_phase_full_moon">oṣupa kikun</string>
+    <string name="moon_phase_waning_gibbous">oṣupa ti o n dinku</string>
+    <string name="moon_phase_last_quarter">mẹẹdogun to kẹhin</string>
+    <string name="moon_phase_waning_crescent">oṣupa ti o n dinku</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

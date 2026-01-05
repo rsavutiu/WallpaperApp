@@ -4,6 +4,15 @@
     <string name="query_sunny">Солнечные пейзажи</string>
     <string name="query_rainy">Дождливые пейзажи</string>
     <string name="query_snowy">Снежные пейзажи</string>
+    <string name="query_night_sky">ночное небо звезды туманность</string>
+    <string name="moon_phase_new_moon">новолуние</string>
+    <string name="moon_phase_waxing_crescent">растущий полумесяц</string>
+    <string name="moon_phase_first_quarter">первая четверть</string>
+    <string name="moon_phase_waxing_gibbous">растущая луна</string>
+    <string name="moon_phase_full_moon">полнолуние</string>
+    <string name="moon_phase_waning_gibbous">убывающая луна</string>
+    <string name="moon_phase_last_quarter">последняя четверть</string>
+    <string name="moon_phase_waning_crescent">убывающий полумесяц</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>

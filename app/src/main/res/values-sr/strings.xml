@@ -4,6 +4,15 @@
     <string name="query_sunny">Sunčani pejzaži</string>
     <string name="query_rainy">Kišni pejzaži</string>
     <string name="query_snowy">Snežni pejzaži</string>
+    <string name="query_night_sky">ноћно небо звезде маглина</string>
+    <string name="moon_phase_new_moon">млад месец</string>
+    <string name="moon_phase_waxing_crescent">растући срп</string>
+    <string name="moon_phase_first_quarter">прва четвртина</string>
+    <string name="moon_phase_waxing_gibbous">растући месец</string>
+    <string name="moon_phase_full_moon">пун месец</string>
+    <string name="moon_phase_waning_gibbous">опадајући месец</string>
+    <string name="moon_phase_last_quarter">последња четвртина</string>
+    <string name="moon_phase_waning_crescent">опадајући срп</string>
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>
