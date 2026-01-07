@@ -77,13 +77,10 @@ class GetAtmosImageUseCase @Inject constructor(
                 }
             }
 
-            if (isDynamicWallpaper) {
-                Log.i(TAG, "Dynamic wallpaper enabled: Clearing old image cache")
-                if (rawFile.exists()) rawFile.delete()
-                if (metadataFile.exists()) metadataFile.delete()
-            }
-            
-            Log.w(TAG, "Fallback to fetching a new image")
+            // DO NOT delete the cache here anymore. 
+            // We only replace it in UpdateWallpaperUseCase once the new download is successful.
+
+            Log.w(TAG, "Fetching a new image")
             // If we reach here, we need to fetch a NEW image (either forced or none exists)
             val preferredProviderName: String =
                 userPreferencesRepository.preferredImageProvider.first()
@@ -103,7 +100,7 @@ class GetAtmosImageUseCase @Inject constructor(
             val query = getImageQueryUseCase(weatherData)
             val locationQuery: String? = if (useLocation && weatherData.isDay) locationName else null
 
-            val atmosImageResult = withTimeoutOrNull(10_000L) {
+            val atmosImageResult = withTimeoutOrNull(15_000L) {
                 primaryProvider.fetchImage(query = query, location = locationQuery)
             }
 
@@ -122,13 +119,6 @@ class GetAtmosImageUseCase @Inject constructor(
             )
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-
-    private fun updateMetadata(atmosImage: AtmosImage) {
-        val json = Gson().toJson(atmosImage)
-        context.openFileOutput(METADATA_FILE, Context.MODE_PRIVATE).use {
-            it.write(json.toByteArray())
         }
     }
 

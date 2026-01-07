@@ -115,7 +115,7 @@ class DataStoreUserPreferencesRepository @Inject constructor(
 
     override val isDynamicWallpaperEnabled: Flow<Boolean> =
         context.dataStore.data.map { preferences ->
-            preferences[PreferencesKeys.IS_DYNAMIC_WALLPAPER_ENABLED] ?: false
+            preferences[PreferencesKeys.IS_DYNAMIC_WALLPAPER_ENABLED] ?: true
         }
 
     override suspend fun setDynamicWallpaperEnabled(enabled: Boolean) {
