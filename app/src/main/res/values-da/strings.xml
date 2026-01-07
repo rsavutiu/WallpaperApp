@@ -32,4 +32,23 @@
     <string name="condition_unknown">Ukendt</string>
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
+    <string name="debug_image_provider">Fejlfinding af billedudbyder:</string>
+    <string name="provider_unsplash">Unsplash</string>
+    <string name="provider_pexels">Pexels</string>
+    <string name="provider_pixabay">Pixabay</string>
+    <string name="provider_sourcesplash">SourceSplash</string>
+    <string name="provider_nasa">NASA</string>
+    <string name="tab_setup">Opsætning</string>
+    <string name="tab_calendar">Kalender</string>
+    <string name="tab_wallpaper">Baggrund</string>
+    <string name="enable_calendar">Aktiver kalendersynkronisering</string>
+    <string name="calendar_permission_required">Kalendertilladelse er påkrævet for at vise begivenheder på din baggrund.</string>
+    <string name="no_events_today">Ingen begivenheder i dag</string>
+    <string name="use_location_wallpapers">Brug placeringsbaggrunde</string>
+    <string name="todays_schedule">Dagens skema</string>
+    <string name="refresh_period">Opdateringsperiode</string>
+    <string name="hours">%1$d timer</string>
+    <string name="minutes">%1$d minutter</string>
+    <string name="atmos_wallpaper_updates">Atmos-baggrundsopdateringer</string>
+    <string name="updating_weather">Opdaterer vejrforhold...</string>
 </resources>

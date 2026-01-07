@@ -39,4 +39,17 @@
     <string name="calendar_permission_required">Die Kalenderberechtigung ist erforderlich, um Termine auf Ihrem Hintergrundbild anzuzeigen.</string>
     <string name="no_events_today">Keine Termine heute</string>
     <string name="use_location_wallpapers">Standort für Hintergrundbilder verwenden</string>
+    <string name="debug_image_provider">Fehlerbehebungs-Bildanbieter:</string>
+    <string name="provider_unsplash">Unsplash</string>
+    <string name="provider_pexels">Pexels</string>
+    <string name="provider_pixabay">Pixabay</string>
+    <string name="provider_sourcesplash">SourceSplash</string>
+    <string name="provider_nasa">NASA</string>
+    <string name="tab_wallpaper">Hintergrund</string>
+    <string name="todays_schedule">Heutiger Zeitplan</string>
+    <string name="refresh_period">Aktualisierungszeitraum</string>
+    <string name="hours">%1$d Stunden</string>
+    <string name="minutes">%1$d Minuten</string>
+    <string name="atmos_wallpaper_updates">Atmos-Hintergrund-Updates</string>
+    <string name="updating_weather">Wetterbedingungen werden aktualisiert...</string>
 </resources>

@@ -32,4 +32,23 @@
     <string name="condition_unknown">Neznámé</string>
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
+    <string name="debug_image_provider">Poskytovatel obrázků pro ladění:</string>
+    <string name="provider_unsplash">Unsplash</string>
+    <string name="provider_pexels">Pexels</string>
+    <string name="provider_pixabay">Pixabay</string>
+    <string name="provider_sourcesplash">SourceSplash</string>
+    <string name="provider_nasa">NASA</string>
+    <string name="tab_setup">Nastavení</string>
+    <string name="tab_calendar">Kalendář</string>
+    <string name="tab_wallpaper">Tapeta</string>
+    <string name="enable_calendar">Povolit synchronizaci kalendáře</string>
+    <string name="calendar_permission_required">Pro zobrazení událostí na tapetě je vyžadováno oprávnění kalendáře.</string>
+    <string name="no_events_today">Dnes žádné události</string>
+    <string name="use_location_wallpapers">Použít tapety polohy</string>
+    <string name="todays_schedule">Dnešní program</string>
+    <string name="refresh_period">Období obnovení</string>
+    <string name="hours">%1$d hodin</string>
+    <string name="minutes">%1$d minut</string>
+    <string name="atmos_wallpaper_updates">Aktualizace tapety Atmos</string>
+    <string name="updating_weather">Aktualizace povětrnostních podmínek...</string>
 </resources>
