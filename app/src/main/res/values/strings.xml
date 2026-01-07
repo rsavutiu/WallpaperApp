@@ -16,6 +16,7 @@
     <string name="attribution_unsplash">Unsplash / %s</string>
     <string name="attribution_nasa">NASA/JPL</string>
     <string name="attribution_nasa_with_copyright">NASA / %s</string>
+    <string name="dynamic_wallpaper">Dynamic Wallpaper</string>
     <string name="setup_dynamic_wallpaper">Setup Dynamic Wallpaper</string>
     <string name="wallpaper_updated">Atmos: Wallpaper updated!</string>
     
@@ -67,4 +68,10 @@
     <string name="atmos_wallpaper_updates">Atmos Wallpaper Updates</string>
     <string name="updating_weather">Updating weather conditions...</string>
     <string name="run">RUN</string>
+
+    <string name="dynamic_wallpaper_desc">With every weather refresh, it also changes the wallpaper to a weather inspired random picture from a provider</string>
+    <string name="calendar_sync_desc">Syncs the Google Calendar and shows it on the wallpaper</string>
+    <string name="refresh_period_desc">Period between weather forecast synchronisations</string>
+    <string name="location_usage_desc">Determines your current location to provide accurate weather and localized imagery</string>
+    <string name="temp_unit_desc">Choose between Celsius and Fahrenheit for temperature display</string>
 </resources>

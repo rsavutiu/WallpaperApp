@@ -6,14 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -27,7 +24,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -37,7 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -46,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.smartmuseum.wallpaperapp.BuildConfig
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.ui.MainUiState
+import com.smartmuseum.wallpaperapp.ui.components.SetupRow
 
 @Composable
 fun SetupScreen(
@@ -79,6 +75,7 @@ fun SetupScreen(
         SetupRow(
             icon = Icons.Default.Place,
             label = stringResource(R.string.use_location_wallpapers),
+            secondaryLabel = stringResource(R.string.location_usage_desc),
             onClick = toggleUseLocation
         ) {
             Checkbox(
@@ -92,6 +89,7 @@ fun SetupScreen(
         SetupRow(
             icon = Icons.Default.Thermostat,
             label = "Temperature Unit",
+            secondaryLabel = stringResource(R.string.temp_unit_desc),
             onClick = toggleTemperatureUnit
         ) {
             Button(
@@ -113,6 +111,7 @@ fun SetupScreen(
         SetupRow(
             icon = Icons.Default.CalendarMonth,
             label = stringResource(R.string.enable_calendar),
+            secondaryLabel = stringResource(R.string.calendar_sync_desc),
             onClick = { setCalendarEnabled(!uiState.isCalendarEnabled) }
         ) {
             Switch(
@@ -124,7 +123,8 @@ fun SetupScreen(
         // Dynamic Wallpaper Row
         SetupRow(
             icon = Icons.Default.AutoAwesome,
-            label = "Dynamic Wallpaper",
+            label = stringResource(R.string.dynamic_wallpaper),
+            secondaryLabel = stringResource(R.string.dynamic_wallpaper_desc),
             onClick = { setDynamicWallpaperEnabled(!uiState.isDynamicWallpaperEnabled) }
         ) {
             Switch(
@@ -136,6 +136,7 @@ fun SetupScreen(
         SetupRow(
             icon = Icons.Default.Refresh,
             label = stringResource(R.string.refresh_period),
+            secondaryLabel = stringResource(R.string.refresh_period_desc),
             onClick = { expanded = true }
         ) {
             Box {
@@ -192,45 +193,6 @@ fun SetupScreen(
                 debugTemp = debugTemp,
                 onDebugTempChange = onDebugTempChange
             )
-        }
-    }
-}
-
-@Composable
-private fun SetupRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        color = Color.Black.copy(alpha = 0.6f),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = label,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-            content()
         }
     }
 }

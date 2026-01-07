@@ -226,6 +226,8 @@ class AtmosLiveWallpaperService : WallpaperService() {
         private var atmosImage: AtmosImage? = null
         @Volatile
         private var backgroundBitmap: Bitmap? = null
+
+        @Volatile
         private var accentColor: Int = Color.WHITE
 
         private var isCelsius: Boolean = true
@@ -236,21 +238,28 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         private var weatherShader: RuntimeShader? = null
         private val wallpaperRenderer = WallpaperRenderer(this@AtmosLiveWallpaperService)
+
+        @Volatile
         private var currentXOffset: Float = 0.5f
 
-        // Gyro/Tilt variables
+        // Gyro/Tilt variables - Volatile for thread safety
+        @Volatile
         private var gyroOffsetX = 0f
+
+        @Volatile
         private var gyroOffsetY = 0f
+
         private var smoothedGyroX = 0f
         private var smoothedGyroY = 0f
-        private val smoothingFactor = 0.1f
+        private val smoothingFactor = 0.15f // Slightly faster smoothing
         private val deadZone = 0.01f
 
         private val drawRunnable = object : Runnable {
             override fun run() {
                 if (isVisible) {
+                    checkAndTriggerUpdate()
                     drawFrame()
-                    handler.postDelayed(this, 66) // 15 FPS
+                    handler.postDelayed(this, 33) // Increased to 30 FPS for smoother gyro
                 }
             }
         }
@@ -410,8 +419,8 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
-                val rawX = event.values[1] * 120f
-                val rawY = event.values[0] * 100f
+                val rawX = event.values[0] * 120f
+                val rawY = event.values[1] * 100f
 
                 if (abs(rawX - smoothedGyroX) > deadZone * 50f) {
                     smoothedGyroX += (rawX - smoothedGyroX) * smoothingFactor
@@ -427,11 +436,11 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-        private fun drawFrame() {
-            scope.launch {
-                val current = System.currentTimeMillis()
-                if (current - lastUpdateTimestamp > refreshPeriod * 1000 * 60) {
-                    lastUpdateTimestamp = current
+        private fun checkAndTriggerUpdate() {
+            val current = System.currentTimeMillis()
+            if (refreshPeriod > 0 && current - lastUpdateTimestamp > refreshPeriod * 60_000) {
+                lastUpdateTimestamp = current
+                scope.launch {
                     val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
                         .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                         .addTag(AtmosApplication.WALLPAPER_UPDATE_TAG)
@@ -444,7 +453,9 @@ class AtmosLiveWallpaperService : WallpaperService() {
                     )
                 }
             }
+        }
 
+        private fun drawFrame() {
             if (!isVisible) return
             val holder = surfaceHolder
             val canvas = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -454,14 +465,19 @@ class AtmosLiveWallpaperService : WallpaperService() {
             } ?: return
 
             try {
+                // Read volatile offsets once for consistency within the frame
+                val gX = gyroOffsetX
+                val gY = gyroOffsetY
+                val xOff = currentXOffset
+
                 wallpaperRenderer.drawFrame(
                     canvas = canvas,
                     atmosImage = atmosImage,
                     backgroundBitmap = backgroundBitmap,
                     weatherShader = weatherShader,
-                    currentXOffset = currentXOffset,
-                    gyroOffsetX = gyroOffsetX,
-                    gyroOffsetY = gyroOffsetY,
+                    currentXOffset = xOff,
+                    gyroOffsetX = gX,
+                    gyroOffsetY = gY,
                     accentColor = accentColor,
                     isCelsius = isCelsius,
                     isCalendarEnabled = isCalendarEnabled,
@@ -479,11 +495,6 @@ class AtmosLiveWallpaperService : WallpaperService() {
             }
         }
 
-
-
-
-
-
         override fun onDestroy() {
             super.onDestroy()
             scope.cancel()
@@ -491,4 +502,3 @@ class AtmosLiveWallpaperService : WallpaperService() {
         }
     }
 }
-

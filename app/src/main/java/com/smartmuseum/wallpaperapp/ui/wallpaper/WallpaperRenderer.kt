@@ -54,25 +54,36 @@ class WallpaperRenderer(private val context: Context) {
         val height = canvas.height.toFloat()
         frameCounter++
 
+        // 0. Clear canvas with a solid color to prevent garbage pixels at edges
+        canvas.drawColor(Color.parseColor("#0F172A"))
+
         // 1. Draw Background with both Swipe and Gyro Parallax
         backgroundBitmap?.let { bmp ->
+            val margin = 120f // Increased margin to prevent edge gaps
+            val gyroScale = 2.0f
+
+            // Calculate src rect for a larger destination to ensure we have enough bitmap data for parallax
             val src = calculateCenterCropRect(
                 bmp.width,
                 bmp.height,
-                canvas.width,
-                canvas.height,
+                (width + margin * 2).toInt(),
+                (height + margin * 2).toInt(),
                 currentXOffset
             )
-            // Apply gyro offset to the destination rectangle for depth
-            val gyroScale = 2.5f
+
+            // Invert gyro offsets for natural parallax and clamp to ensure background always covers the screen
+            val maxShift = margin - 10f
+            val shiftX = (-gyroOffsetX * gyroScale).coerceIn(-maxShift, maxShift)
+            val shiftY = (-gyroOffsetY * gyroScale).coerceIn(-maxShift, maxShift)
+
             val dst = RectF(
-                -60f + gyroOffsetX * gyroScale,
-                -60f + gyroOffsetY * gyroScale,
-                width + 60f + gyroOffsetX * gyroScale,
-                height + 60f + gyroOffsetY * gyroScale
+                -margin + shiftX,
+                -margin + shiftY,
+                width + margin + shiftX,
+                height + margin + shiftY
             )
             canvas.drawBitmap(bmp, src, dst.toRect(), null)
-        } ?: canvas.drawColor(Color.parseColor("#0F172A"))
+        }
 
         // 2. AGSL Weather Effects
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -80,7 +91,9 @@ class WallpaperRenderer(private val context: Context) {
                 val elapsed = (System.currentTimeMillis() - startTime) / 1000f
                 shader.setFloatUniform("iResolution", width, height)
                 shader.setFloatUniform("iTime", elapsed * 4.0f)
-                shader.setFloatUniform("iOffset", gyroOffsetX, gyroOffsetY)
+                // Sync shader offset with background movement
+                // Note: Shader uses iOffset in uv calculation which shifts content
+                shader.setFloatUniform("iOffset", gyroOffsetX * 0.8f, gyroOffsetY * 0.8f)
                 shaderPaint.shader = shader
                 canvas.drawRect(0f, 0f, width, height, shaderPaint)
             }
@@ -143,7 +156,7 @@ class WallpaperRenderer(private val context: Context) {
 
         // Swipe and Gyro shift for UI
         val contentParallaxShift =
-            ((currentXOffset - 0.5f) * (width * 0.05f)) - (gyroOffsetX * 2.0f)
+            ((currentXOffset - 0.5f) * (width * 0.05f)) - (gyroOffsetX * 1.5f)
         val shiftedMargin = margin - contentParallaxShift
 
         atmosImage?.locationName?.let { loc ->
@@ -198,7 +211,7 @@ class WallpaperRenderer(private val context: Context) {
             currentY += height * 0.05f
 
             val forecastParallaxShift =
-                ((currentXOffset - 0.5f) * (width * 0.3f)) - (gyroOffsetX * 0.5f)
+                ((currentXOffset - 0.5f) * (width * 0.3f)) - (gyroOffsetX * 0.4f)
             drawHourlyStrip(
                 canvas,
                 weather.hourlyForecast,

@@ -28,7 +28,9 @@ data class WeatherData(
     val snowfall: Double,
     val rain: Double,
     val showers: Double,
-    val cloudCover: Int
+    val cloudCover: Int,
+    val sunrise: Long = 0L, // Epoch millis
+    val sunset: Long = 0L   // Epoch millis
 )
 
 @Serializable

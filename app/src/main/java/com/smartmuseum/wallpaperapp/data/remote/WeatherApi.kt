@@ -10,6 +10,7 @@ interface WeatherApi {
         @Query("longitude") longitude: Double,
         @Query("current") current: String = "temperature_2m,relative_humidity_2m,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover",
         @Query("hourly") hourly: String = "temperature_2m,precipitation_probability,weather_code",
+        @Query("daily") daily: String = "sunrise,sunset",
         @Query("forecast_hours") forecastHours: Int = 24,
         @Query("timezone") timezone: String = "auto"
     ): WeatherResponse
@@ -21,7 +22,8 @@ interface WeatherApi {
 
 data class WeatherResponse(
     val current: CurrentWeather,
-    val hourly: HourlyWeather
+    val hourly: HourlyWeather,
+    val daily: DailyWeather
 )
 
 data class CurrentWeather(
@@ -33,7 +35,13 @@ data class CurrentWeather(
     val showers: Double,
     val snowfall: Double,
     val weather_code: Int,
-    val cloud_cover: Int
+    val cloud_cover: Int,
+    val time: String
+)
+
+data class DailyWeather(
+    val sunrise: List<String>,
+    val sunset: List<String>
 )
 
 data class HourlyWeather(
