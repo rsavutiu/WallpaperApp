@@ -15,6 +15,7 @@ class GetImageQueryUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     operator fun invoke(weather: WeatherData): String {
+        val now = System.currentTimeMillis()
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val month = calendar.get(Calendar.MONTH)
@@ -36,13 +37,33 @@ class GetImageQueryUseCase @Inject constructor(
             else -> "Freezing"
         }
 
-        // Determine Time of Day descriptor
-        val timeOfDay = when (hour) {
-            in 5..6 -> "Sunrise"
-            in 7..10 -> "Morning"
-            in 11..16 -> "Day"
-            in 17..18 -> "Sunset"
-            in 19..20 -> "Twilight"
+        // Determine Time of Day descriptor based on actual sun position if available
+        val sunrise = weather.sunrise
+        val sunset = weather.sunset
+
+        val timeOfDay = when {
+            sunrise == 0L || sunset == 0L -> {
+                // Fallback to hardcoded hours if sun data is missing
+                when (hour) {
+                    in 5..6 -> "Sunrise"
+                    in 7..10 -> "Morning"
+                    in 11..16 -> "Day"
+                    in 17..18 -> "Sunset"
+                    in 19..20 -> "Twilight"
+                    else -> "Night"
+                }
+            }
+            // Sunrise: 30 mins before to 30 mins after
+            now in (sunrise - 1800000)..(sunrise + 1800000) -> "Sunrise"
+            // Sunset: 45 mins before to 15 mins after
+            now in (sunset - 2700000)..(sunset + 900000) -> "Sunset"
+            // Twilight: 15 mins after to 60 mins after sunset (Blue Hour)
+            now in (sunset + 900000)..(sunset + 3600000) -> "Twilight"
+            // Daytime: Between sunrise and sunset windows
+            now in (sunrise + 1800001)..(sunset - 2700001) -> {
+                // If within first 3 hours after sunrise window, it's morning
+                if (now < sunrise + 12600000) "Morning" else "Day"
+            }
             else -> "Night"
         }
 
@@ -92,7 +113,7 @@ class GetImageQueryUseCase @Inject constructor(
         val ret = queryParts.joinToString(" ").replace("  ", " ").trim()
 
         if (BuildConfig.DEBUG) {
-            Log.i(TAG, "Query Generated: $ret (Hour: $hour, Temp: ${weather.currentTemp})")
+            Log.i(TAG, "Query Generated: $ret (Phase: $timeOfDay, Temp: ${weather.currentTemp})")
         }
         return ret
     }
