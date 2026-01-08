@@ -4,16 +4,10 @@
     <string name="query_sunny">Paisajes soleados</string>
     <string name="query_rainy">Paisajes lluviosos</string>
     <string name="query_snowy">Paisajes nevados</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Configurar fondo dinámico</string>
-    <string name="wallpaper_updated">Atmos: ¡Fondo actualizado!</string>
     <string name="stage_location">Obteniendo ubicación…</string>
     <string name="stage_weather">Obteniendo clima e imagen…</string>
     <string name="stage_wallpaper">Aplicando fondo…</string>
     <string name="stage_completed">Completado</string>
-    <string name="run_immediately">Ejecutar inmediatamente</string>
     <string name="humidity_precip_format">Humedad: %1$d%% | Precip: %2$.1fmm</string>
     <string name="initializing">Inicializando…</string>
     <string name="condition_clear">Cielo despejado</string>

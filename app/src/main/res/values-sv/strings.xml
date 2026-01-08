@@ -13,16 +13,10 @@
     <string name="moon_phase_waning_gibbous">avtagande måne</string>
     <string name="moon_phase_last_quarter">sista kvarteret</string>
     <string name="moon_phase_waning_crescent">avtagande halvmåne</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Ställ in dynamisk bakgrund</string>
-    <string name="wallpaper_updated">Atmos: Bakgrundsbild uppdaterad!</string>
     <string name="stage_location">Hämtar plats…</string>
     <string name="stage_weather">Hämtar väder och bild…</string>
     <string name="stage_wallpaper">Använder bakgrundsbild…</string>
     <string name="stage_completed">Slutförd</string>
-    <string name="run_immediately">Kör omedelbart</string>
     <string name="humidity_precip_format">Luftfuktighet: %1$d%% | Nederbörd: %2$.1fmm</string>
     <string name="initializing">Initierar…</string>
     <string name="condition_clear">Klart</string>

@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">Atmos</string>
-    <string name="metadata_type_nasa">nasa_apod</string>
-    <string name="metadata_type_unsplash">unsplash</string>
     <string name="query_overcast">Overcast Landscapes</string>
     <string name="query_sunny">Sunny Landscapes</string>
     <string name="query_rainy">Rainy Landscapes</string>
@@ -15,19 +13,13 @@
     <string name="moon_phase_waning_gibbous">waning gibbous moon</string>
     <string name="moon_phase_last_quarter">last quarter moon</string>
     <string name="moon_phase_waning_crescent">waning crescent moon</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
     <string name="dynamic_wallpaper">Dynamic Wallpaper</string>
-    <string name="setup_dynamic_wallpaper">Setup Dynamic Wallpaper</string>
-    <string name="wallpaper_updated">Atmos: Wallpaper updated!</string>
     
     <string name="stage_location">Getting Location…</string>
     <string name="stage_weather">Fetching Weather &amp; Image…</string>
     <string name="stage_wallpaper">Applying Wallpaper…</string>
     <string name="stage_completed">Completed</string>
     
-    <string name="run_immediately">Run Immediately</string>
     <string name="humidity_precip_format">Humidity: %1$d%% | Precip: %2$.1fmm</string>
     <string name="initializing">Initializing…</string>
     
@@ -49,19 +41,10 @@
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
 
-    <string name="debug_image_provider">Debug Image Provider:</string>
-    <string name="provider_unsplash">Unsplash</string>
-    <string name="provider_pexels">Pexels</string>
-    <string name="provider_pixabay">Pixabay</string>
-    <string name="provider_sourcesplash">SourceSplash</string>
-    <string name="provider_nasa">NASA</string>
 
     <string name="tab_setup">Setup</string>
-    <string name="tab_calendar">Calendar</string>
     <string name="tab_wallpaper">Wallpaper</string>
     <string name="enable_calendar">Enable Calendar Sync</string>
-    <string name="calendar_permission_required">Calendar permission is required to show events on your wallpaper.</string>
-    <string name="no_events_today">No events today</string>
     <string name="use_location_wallpapers">Use location for wallpapers</string>
     <string name="todays_schedule">Today\'s schedule</string>
     <string name="refresh_period">Refresh period</string>

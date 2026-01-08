@@ -4,18 +4,10 @@
     <string name="query_sunny">Paysages ensoleillés</string>
     <string name="query_rainy">Paysages pluvieux</string>
     <string name="query_snowy">Paysages enneigés</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="metadata_type_nasa">nasa_apod</string>
-    <string name="metadata_type_unsplash">unsplash</string>
-    <string name="setup_dynamic_wallpaper">Configurer le fond d\'écran dynamique</string>
-    <string name="wallpaper_updated">Atmos : Fond d\'écran mis à jour !</string>
     <string name="stage_location">Obtention de la position…</string>
     <string name="stage_weather">Récupération météo et image…</string>
     <string name="stage_wallpaper">Application du fond d\'écran…</string>
     <string name="stage_completed">Terminé</string>
-    <string name="run_immediately">Exécuter immédiatement</string>
     <string name="humidity_precip_format">Humidité : %1$d%% | Précip : %2$.1fmm</string>
     <string name="initializing">Initialisation…</string>
     <string name="condition_clear">Ciel dégagé</string>
@@ -35,17 +27,8 @@
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
 
-    <string name="debug_image_provider">Sélecteur d\'image (Debug) :</string>
-    <string name="provider_unsplash">Unsplash</string>
-    <string name="provider_pexels">Pexels</string>
-    <string name="provider_pixabay">Pixabay</string>
-    <string name="provider_sourcesplash">SourceSplash</string>
-    <string name="provider_nasa">NASA</string>
 
     <string name="tab_setup">Configuration</string>
-    <string name="tab_calendar">Calendrier</string>
     <string name="enable_calendar">Sincronisation Calendrier</string>
-    <string name="calendar_permission_required">L\'autorisation du calendrier est requise pour afficher les événements.</string>
-    <string name="no_events_today">Aucun événement aujourd\'hui</string>
     <string name="use_location_wallpapers">Utiliser la localisation pour les images</string>
 </resources>

@@ -4,16 +4,10 @@
     <string name="query_sunny">Sonnige Landschaften</string>
     <string name="query_rainy">Regnerische Landschaften</string>
     <string name="query_snowy">Verschneite Landschaften</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Dynamisches Hintergrundbild einrichten</string>
-    <string name="wallpaper_updated">Atmos: Hintergrundbild aktualisiert!</string>
     <string name="stage_location">Standort wird ermittelt…</string>
     <string name="stage_weather">Wetter &amp; Bild werden geladen…</string>
     <string name="stage_wallpaper">Hintergrundbild wird angewendet…</string>
     <string name="stage_completed">Abgeschlossen</string>
-    <string name="run_immediately">Sofort ausführen</string>
     <string name="humidity_precip_format">Feuchtigkeit: %1$d%% | Niederschlag: %2$.1fmm</string>
     <string name="initializing">Initialisierung…</string>
     <string name="condition_clear">Klarer Himmel</string>
@@ -34,9 +28,6 @@
     <string name="unit_f">°F</string>
 
     <string name="tab_setup">Einrichtung</string>
-    <string name="tab_calendar">Kalender</string>
     <string name="enable_calendar">Kalendersynchronisierung aktivieren</string>
-    <string name="calendar_permission_required">Die Kalenderberechtigung ist erforderlich, um Termine auf Ihrem Hintergrundbild anzuzeigen.</string>
-    <string name="no_events_today">Keine Termine heute</string>
     <string name="use_location_wallpapers">Standort für Hintergrundbilder verwenden</string>
 </resources>

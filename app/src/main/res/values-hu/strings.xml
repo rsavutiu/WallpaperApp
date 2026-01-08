@@ -4,16 +4,10 @@
     <string name="query_sunny">Napsütéses tájak</string>
     <string name="query_rainy">Esős tájak</string>
     <string name="query_snowy">Havas tájak</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Dinamikus háttérkép beállítása</string>
-    <string name="wallpaper_updated">Atmos: Háttérkép frissítve!</string>
     <string name="stage_location">Helymeghatározás…</string>
     <string name="stage_weather">Időjárás és kép lekérése…</string>
     <string name="stage_wallpaper">Háttérkép alkalmazása…</string>
     <string name="stage_completed">Kész</string>
-    <string name="run_immediately">Azonnali futtatás</string>
     <string name="humidity_precip_format">Páratartalom: %1$d%% | Csapadék: %2$.1fmm</string>
     <string name="initializing">Inicializálás…</string>
     <string name="condition_clear">Tiszta égbolt</string>

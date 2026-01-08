@@ -1,0 +1,7 @@
+dynamic_wallpaper
+run
+dynamic_wallpaper_desc
+calendar_sync_desc
+refresh_period_desc
+location_usage_desc
+temp_unit_desc
