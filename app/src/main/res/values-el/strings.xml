@@ -4,16 +4,10 @@
     <string name="query_sunny">Ηλιόλουστα τοπία</string>
     <string name="query_rainy">Βροχερά τοπία</string>
     <string name="query_snowy">Χιονισμένα τοπία</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Ρύθμιση δυναμικής ταπετσαρίας</string>
-    <string name="wallpaper_updated">Atmos: Η ταπετσαρία ενημερώθηκε!</string>
     <string name="stage_location">Λήψη τοποθεσίας…</string>
     <string name="stage_weather">Λήψη καιρού και εικόνας…</string>
     <string name="stage_wallpaper">Εφαρμογή ταπετσαρίας…</string>
     <string name="stage_completed">Ολοκληρώθηκε</string>
-    <string name="run_immediately">Άμεση εκτέλεση</string>
     <string name="humidity_precip_format">Υγρασία: %1$d%% | Βροχόπτωση: %2$.1fmm</string>
     <string name="initializing">Προετοιμασία…</string>
     <string name="condition_clear">Αίθριος ουρανός</string>

@@ -4,16 +4,10 @@
     <string name="query_sunny">Solrigt landskab</string>
     <string name="query_rainy">Regnfuldt landskab</string>
     <string name="query_snowy">Snedækket landskab</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Indstil dynamisk baggrund</string>
-    <string name="wallpaper_updated">Atmos: Baggrund opdateret!</string>
     <string name="stage_location">Henter placering…</string>
     <string name="stage_weather">Henter vejr og billede…</string>
     <string name="stage_wallpaper">Anvender baggrund…</string>
     <string name="stage_completed">Gennemført</string>
-    <string name="run_immediately">Kør med det samme</string>
     <string name="humidity_precip_format">Luftfugtighed: %1$d%% | Nedbør: %2$.1fmm</string>
     <string name="initializing">Initialiserer…</string>
     <string name="condition_clear">Klart vejr</string>

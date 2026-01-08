@@ -4,18 +4,12 @@
     <string name="query_sunny">Słoneczne krajobrazy</string>
     <string name="query_rainy">Deszczowe krajobrazy</string>
     <string name="query_snowy">Śnieżne krajobrazy</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Ustaw dynamiczną tapetę</string>
-    <string name="wallpaper_updated">Atmos: Tapeta zaktualizowana!</string>
 
     <string name="stage_location">Pobieranie lokalizacji…</string>
     <string name="stage_weather">Pobieranie pogody i obrazu…</string>
     <string name="stage_wallpaper">Stosowanie tapety…</string>
     <string name="stage_completed">Zakończono</string>
 
-    <string name="run_immediately">Uruchom natychmiast</string>
     <string name="humidity_precip_format">Wilgotność: %1$d%% | Opady: %2$.1fmm</string>
     <string name="initializing">Inicjalizacja…</string>
 
@@ -37,17 +31,8 @@
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
 
-    <string name="debug_image_provider">Dostawca obrazu (Debug):</string>
-    <string name="provider_unsplash">Unsplash</string>
-    <string name="provider_pexels">Pexels</string>
-    <string name="provider_pixabay">Pixabay</string>
-    <string name="provider_sourcesplash">SourceSplash</string>
-    <string name="provider_nasa">NASA</string>
 
     <string name="tab_setup">Konfiguracja</string>
-    <string name="tab_calendar">Kalendarz</string>
     <string name="enable_calendar">Synchronizacja Kalendarza</string>
-    <string name="calendar_permission_required">Uprawnienia do kalendarza są wymagane, aby wyświetlać wydarzenia na tapecie.</string>
-    <string name="no_events_today">Brak wydarzeń dzisiaj</string>
     <string name="use_location_wallpapers">Użyj lokalizacji dla tapet</string>
 </resources>

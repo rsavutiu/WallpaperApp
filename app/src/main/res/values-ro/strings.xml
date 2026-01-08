@@ -4,18 +4,12 @@
     <string name="query_sunny">Peisaje însorite</string>
     <string name="query_rainy">Peisaje ploioase</string>
     <string name="query_snowy">Peisaje înzăpezite</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Configurare fundal dinamic</string>
-    <string name="wallpaper_updated">Atmos: Fundal actualizat!</string>
 
     <string name="stage_location">Obținere locație…</string>
     <string name="stage_weather">Preluare vreme și imagine…</string>
     <string name="stage_wallpaper">Aplicare fundal…</string>
     <string name="stage_completed">Finalizat</string>
 
-    <string name="run_immediately">Execută imediat</string>
     <string name="humidity_precip_format">Umiditate: %1$d%% | Precip: %2$.1fmm</string>
     <string name="initializing">Inițializare…</string>
 
@@ -37,18 +31,9 @@
     <string name="unit_c">°C</string>
     <string name="unit_f">°F</string>
 
-    <string name="debug_image_provider">Sursă imagine (Debug):</string>
-    <string name="provider_unsplash">Unsplash</string>
-    <string name="provider_pexels">Pexels</string>
-    <string name="provider_pixabay">Pixabay</string>
-    <string name="provider_sourcesplash">SourceSplash</string>
-    <string name="provider_nasa">NASA</string>
 
     <string name="tab_setup">Configurare</string>
-    <string name="tab_calendar">Calendar</string>
     <string name="enable_calendar">Sincronizare Calendar</string>
-    <string name="calendar_permission_required">Permisiunea de calendar este necesară pentru a afișa evenimentele pe fundal.</string>
-    <string name="no_events_today">Niciun eveniment azi</string>
     <string name="use_location_wallpapers">Folosește locația pentru fundal</string>
     <string name="todays_schedule">Programul de azi</string>
 </resources>

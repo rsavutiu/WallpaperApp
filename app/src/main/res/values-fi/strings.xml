@@ -4,16 +4,10 @@
     <string name="query_sunny">Aurinkoinen maisema</string>
     <string name="query_rainy">Sateinen maisema</string>
     <string name="query_snowy">Luminen maisema</string>
-    <string name="attribution_unsplash">Unsplash / %s</string>
-    <string name="attribution_nasa">NASA/JPL</string>
-    <string name="attribution_nasa_with_copyright">NASA / %s</string>
-    <string name="setup_dynamic_wallpaper">Aseta dynaaminen taustakuva</string>
-    <string name="wallpaper_updated">Atmos: Taustakuva päivitetty!</string>
     <string name="stage_location">Haetaan sijaintia…</string>
     <string name="stage_weather">Haetaan säätä ja kuvaa…</string>
     <string name="stage_wallpaper">Otetaan taustakuva käyttöön…</string>
     <string name="stage_completed">Valmis</string>
-    <string name="run_immediately">Suorita heti</string>
     <string name="humidity_precip_format">Kosteus: %1$d%% | Sademäärä: %2$.1fmm</string>
     <string name="initializing">Alustetaan…</string>
     <string name="condition_clear">Selkeää</string>
