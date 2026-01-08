@@ -22,6 +22,10 @@
 -keep class com.google.gson.stream.JsonReader
 -keep class com.google.gson.stream.JsonWriter
 
+
+-dontwarn edu.umd.cs.findbugs.annotations.**
+
+
 # --- Retrofit ---
 -keepattributes RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations
 -keep class retrofit2.** { *; }

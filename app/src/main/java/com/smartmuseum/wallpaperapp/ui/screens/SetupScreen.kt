@@ -7,21 +7,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
@@ -46,16 +46,14 @@ import com.smartmuseum.wallpaperapp.ui.components.SetupRow
 @Composable
 fun SetupScreen(
     uiState: MainUiState,
-    toggleUseLocation: () -> Unit,
-    toggleTemperatureUnit: () -> Unit,
     setCalendarEnabled: (Boolean) -> Unit,
     setDynamicWallpaperEnabled: (Boolean) -> Unit,
-    onRunUpdate: () -> Unit,
     onDebugWeatherChange: (Int?) -> Unit,
     updateRefreshPeriod: (Long) -> Unit,
     debugWeatherCode: Int?,
     debugTemp: Double,
-    onDebugTempChange: (Double?) -> Unit
+    onDebugTempChange: (Double?) -> Unit,
+    onToggleShowLocation: (Boolean) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     val refreshOptions = remember {
@@ -68,43 +66,20 @@ fun SetupScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Use Location Row
         SetupRow(
             icon = Icons.Default.Place,
-            label = stringResource(R.string.use_location_wallpapers),
-            secondaryLabel = stringResource(R.string.location_usage_desc),
-            onClick = toggleUseLocation
+            label = "Show Location",
+            secondaryLabel = "Display the city name on the wallpaper",
+            onClick = { onToggleShowLocation(!uiState.showLocation) }
         ) {
-            Checkbox(
-                checked = uiState.useLocation,
-                onCheckedChange = { toggleUseLocation() },
-                colors = CheckboxDefaults.colors(checkmarkColor = MaterialTheme.colorScheme.primary)
+            Switch(
+                checked = uiState.showLocation,
+                onCheckedChange = onToggleShowLocation
             )
-        }
-
-        // Temperature Unit Row
-        SetupRow(
-            icon = Icons.Default.Thermostat,
-            label = "Temperature Unit",
-            secondaryLabel = stringResource(R.string.temp_unit_desc),
-            onClick = toggleTemperatureUnit
-        ) {
-            Button(
-                onClick = toggleTemperatureUnit,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White.copy(alpha = 0.2f),
-                    contentColor = Color.White
-                )
-            ) {
-                Text(
-                    stringResource(if (uiState.isCelsius) R.string.unit_f else R.string.unit_c),
-                    fontSize = 12.sp
-                )
-            }
         }
 
         // Calendar Sync Row
@@ -188,6 +163,7 @@ fun SetupScreen(
 
         if (BuildConfig.DEBUG) {
             DebugWeatherSection(
+                modifier = Modifier.fillMaxWidth(),
                 onDebugWeatherChange = onDebugWeatherChange,
                 debugWeatherCode = debugWeatherCode,
                 debugTemp = debugTemp,
@@ -199,15 +175,16 @@ fun SetupScreen(
 
 @Composable
 private fun DebugWeatherSection(
+    modifier: Modifier,
     onDebugWeatherChange: (Int?) -> Unit,
     debugWeatherCode: Int?,
     debugTemp: Double,
     onDebugTempChange: (Double?) -> Unit
 ) {
     Surface(
+        modifier = modifier.defaultMinSize(minHeight = 200.dp),
         color = Color.Black.copy(alpha = 0.6f),
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -218,7 +195,8 @@ private fun DebugWeatherSection(
             Spacer(modifier = Modifier.height(8.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 val buttonColors = ButtonDefaults.buttonColors(
                     containerColor = Color.White.copy(alpha = 0.1f),

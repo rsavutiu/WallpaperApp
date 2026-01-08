@@ -46,6 +46,9 @@ class WallpaperRenderer(private val context: Context) {
         accentColor: Int,
         isCelsius: Boolean,
         isCalendarEnabled: Boolean,
+        showLocation: Boolean,
+        showTemperature: Boolean,
+        showForecast: Boolean,
         forcedTemperature: Double?,
         forcedWeatherCode: Int?,
         lastUpdateTimestamp: Long
@@ -124,6 +127,9 @@ class WallpaperRenderer(private val context: Context) {
             accentColor,
             isCelsius,
             isCalendarEnabled,
+            showLocation,
+            showTemperature,
+            showForecast,
             forcedTemperature,
             forcedWeatherCode,
             lastUpdateTimestamp
@@ -140,6 +146,9 @@ class WallpaperRenderer(private val context: Context) {
         accentColor: Int,
         isCelsius: Boolean,
         isCalendarEnabled: Boolean,
+        showLocation: Boolean,
+        showTemperature: Boolean,
+        showForecast: Boolean,
         forcedTemperature: Double?,
         forcedWeatherCode: Int?,
         lastUpdateTimestamp: Long
@@ -159,69 +168,75 @@ class WallpaperRenderer(private val context: Context) {
             ((currentXOffset - 0.5f) * (width * 0.05f)) - (gyroOffsetX * 1.5f)
         val shiftedMargin = margin - contentParallaxShift
 
-        atmosImage?.locationName?.let { loc ->
-            textPaint.textSize = height * 0.025f
-            textPaint.color = accentColor
-            canvas.drawText(loc.uppercase(), shiftedMargin, currentY, textPaint)
-            currentY += height * 0.035f
+        if (showLocation) {
+            atmosImage?.locationName?.let { loc ->
+                textPaint.textSize = height * 0.025f
+                textPaint.color = accentColor
+                canvas.drawText(loc.uppercase(), shiftedMargin, currentY, textPaint)
+                currentY += height * 0.035f
+            }
         }
 
         atmosImage?.weather?.let { weather ->
-            val temp = forcedTemperature ?: weather.currentTemp
-            val displayWeatherCode = forcedWeatherCode ?: weather.weatherCode
-            val tempValue = if (isCelsius) temp else (temp * 9 / 5) + 32
-            val unit = if (isCelsius) "°C" else "°F"
-            val tempText = "${tempValue.toInt()}$unit"
+            if (showTemperature) {
+                val temp = forcedTemperature ?: weather.currentTemp
+                val displayWeatherCode = forcedWeatherCode ?: weather.weatherCode
+                val tempValue = if (isCelsius) temp else (temp * 9 / 5) + 32
+                val unit = if (isCelsius) "°C" else "°F"
+                val tempText = "${tempValue.toInt()}$unit"
 
-            textPaint.textSize = height * 0.08f
-            textPaint.color = Color.WHITE
-            canvas.drawText(
-                tempText,
-                shiftedMargin + (height * 0.06f),
-                currentY + (height * 0.06f),
-                textPaint
-            )
-
-            val iconRes = getWeatherIconRes(displayWeatherCode, weather.isDay)
-            drawTintedIcon(
-                canvas,
-                iconRes,
-                shiftedMargin,
-                currentY,
-                height * 0.05f,
-                Color.WHITE
-            )
-
-            currentY += height * 0.09f
-
-            textPaint.textSize = height * 0.03f
-            textPaint.typeface = Typeface.DEFAULT
-            canvas.drawText(weather.condition, shiftedMargin, currentY, textPaint)
-            currentY += height * 0.025f
-
-            textPaint.textSize = height * 0.018f
-            textPaint.color = Color.LTGRAY
-            val stats = "Humidity: ${weather.humidity}% | Precip: ${
-                String.format(
-                    "%.1f",
-                    weather.precipitation
+                textPaint.textSize = height * 0.08f
+                textPaint.color = Color.WHITE
+                canvas.drawText(
+                    tempText,
+                    shiftedMargin + (height * 0.06f),
+                    currentY + (height * 0.06f),
+                    textPaint
                 )
-            }mm"
-            canvas.drawText(stats, shiftedMargin, currentY, textPaint)
-            currentY += height * 0.05f
 
-            val forecastParallaxShift =
-                ((currentXOffset - 0.5f) * (width * 0.3f)) - (gyroOffsetX * 0.4f)
-            drawHourlyStrip(
-                canvas,
-                weather.hourlyForecast,
-                shiftedMargin - forecastParallaxShift,
-                currentY,
-                width - margin * 2,
-                height,
-                isCelsius
-            )
-            currentY += height * 0.08f
+                val iconRes = getWeatherIconRes(displayWeatherCode, weather.isDay)
+                drawTintedIcon(
+                    canvas,
+                    iconRes,
+                    shiftedMargin,
+                    currentY,
+                    height * 0.05f,
+                    Color.WHITE
+                )
+
+                currentY += height * 0.09f
+
+                textPaint.textSize = height * 0.03f
+                textPaint.typeface = Typeface.DEFAULT
+                canvas.drawText(weather.condition, shiftedMargin, currentY, textPaint)
+                currentY += height * 0.025f
+
+                textPaint.textSize = height * 0.018f
+                textPaint.color = Color.LTGRAY
+                val stats = "Humidity: ${weather.humidity}% | Precip: ${
+                    String.format(
+                        "%.1f",
+                        weather.precipitation
+                    )
+                }mm"
+                canvas.drawText(stats, shiftedMargin, currentY, textPaint)
+                currentY += height * 0.05f
+            }
+
+            if (showForecast) {
+                val forecastParallaxShift =
+                    ((currentXOffset - 0.5f) * (width * 0.3f)) - (gyroOffsetX * 0.4f)
+                drawHourlyStrip(
+                    canvas,
+                    weather.hourlyForecast,
+                    shiftedMargin - forecastParallaxShift,
+                    currentY,
+                    width - margin * 2,
+                    height,
+                    isCelsius
+                )
+                currentY += height * 0.08f
+            }
         }
 
         if (isCalendarEnabled) {

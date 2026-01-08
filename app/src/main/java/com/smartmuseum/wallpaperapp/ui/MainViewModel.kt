@@ -33,10 +33,14 @@ import com.smartmuseum.wallpaperapp.domain.model.WeatherData
 import com.smartmuseum.wallpaperapp.domain.repository.CalendarRepository
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
+import com.smartmuseum.wallpaperapp.domain.usecase.GeocodeLocationUseCase
+import com.smartmuseum.wallpaperapp.domain.usecase.LocationResult
 import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -79,12 +83,20 @@ data class MainUiState(
     val useLocation: Boolean = false,
     val isCalendarEnabled: Boolean = false,
     val isDynamicWallpaperEnabled: Boolean = false,
+    val showLocation: Boolean = true,
+    val showTemperature: Boolean = true,
+    val showForecast: Boolean = true,
+    val showSunTransitions: Boolean = true,
     val customColorScheme: ColorScheme? = null,
     val providerImages: List<ProviderImages> = emptyList(),
     val isFetchingImages: Boolean = false,
     val refreshPeriodInMinutes: Long = 30,
     val debugWeatherCode: Int? = null,
-    val debugTemperature: Double = 20.0
+    val debugTemperature: Double = 20.0,
+    // Manual Location Picker State
+    val showLocationPicker: Boolean = false,
+    val locationSearchResults: List<LocationResult> = emptyList(),
+    val isSearchingLocation: Boolean = false
 )
 
 @HiltViewModel
@@ -99,7 +111,8 @@ class MainViewModel @Inject constructor(
     private val updateWallpaperUseCase: UpdateWallpaperUseCase,
     private val locationTracker: LocationTracker,
     private val wallpaperRepository: WallpaperRepository,
-    private val calendarRepository: CalendarRepository
+    private val calendarRepository: CalendarRepository,
+    private val geocodeLocationUseCase: GeocodeLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -108,13 +121,29 @@ class MainViewModel @Inject constructor(
     private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
     val navigationEvent: SharedFlow<NavigationEvent> = _navigationEvent.asSharedFlow()
 
+    private var searchJob: Job? = null
+
     init {
         refreshData()
         observeWork()
         observePreferences()
         fetchAllProviderImages()
 
-        triggerUpdate(openWallpaperPreview = false)
+        checkLocationRequirement()
+    }
+
+    private fun checkLocationRequirement() {
+        viewModelScope.launch {
+            val location = locationTracker.getCurrentLocation()
+            val savedLocation = userPreferencesRepository.getLastKnownLocation()
+
+            // If we can't get current GPS AND we have no saved location (first run), show picker
+            if (location == null && savedLocation.first == 51.5074 && savedLocation.second == -0.1278) {
+                _uiState.update { it.copy(showLocationPicker = true) }
+            } else {
+                triggerUpdate(openWallpaperPreview = false)
+            }
+        }
     }
 
     private fun observePreferences() {
@@ -144,6 +173,26 @@ class MainViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            userPreferencesRepository.showLocation.collect { show ->
+                _uiState.update { it.copy(showLocation = show) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.showTemperature.collect { show ->
+                _uiState.update { it.copy(showTemperature = show) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.showForecast.collect { show ->
+                _uiState.update { it.copy(showForecast = show) }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.showSunTransistions.collect { show ->
+                _uiState.update { it.copy(showSunTransitions = show) }
+            }
+        }
+        viewModelScope.launch {
             userPreferencesRepository.refreshPeriodInMinutes.collect { period ->
                 _uiState.update { it.copy(refreshPeriodInMinutes = period) }
             }
@@ -157,6 +206,45 @@ class MainViewModel @Inject constructor(
             userPreferencesRepository.forcedTemperature.collect { temp ->
                 _uiState.update { it.copy(debugTemperature = temp ?: 20.0) }
             }
+        }
+    }
+
+    fun searchLocation(query: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(500)
+            _uiState.update { it.copy(isSearchingLocation = true) }
+            val results = geocodeLocationUseCase(query)
+            _uiState.update {
+                it.copy(
+                    locationSearchResults = results,
+                    isSearchingLocation = false
+                )
+            }
+        }
+    }
+
+    fun selectManualLocation(result: LocationResult) {
+        viewModelScope.launch {
+            // Disable automatic location tracking when a manual one is selected
+            userPreferencesRepository.setUseLocation(false)
+            userPreferencesRepository.setLastKnownLocation(Pair(result.latitude, result.longitude))
+            _uiState.update { it.copy(showLocationPicker = false) }
+            triggerUpdate(openWallpaperPreview = false)
+        }
+    }
+
+    fun showManualLocationPicker() {
+        _uiState.update { it.copy(showLocationPicker = true) }
+    }
+
+    fun dismissLocationPicker() {
+        _uiState.update { it.copy(showLocationPicker = false) }
+    }
+
+    fun toggleShowSunTransitions() {
+        viewModelScope.launch {
+            userPreferencesRepository.setShowSunTransistions(!uiState.value.showSunTransitions)
         }
     }
 
@@ -186,6 +274,30 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun setShowLocation(show: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setShowLocation(show)
+        }
+    }
+
+    fun setShowTemperature(show: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setShowTemperature(show)
+        }
+    }
+
+    fun setShowForecast(show: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setShowForecast(show)
+        }
+    }
+
+    fun setShowSunTransitions(show: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setShowSunTransistions(show)
+        }
+    }
+
     fun setDebugWeatherCode(code: Int?) {
         viewModelScope.launch {
             userPreferencesRepository.setForcedWeatherCode(code)
@@ -208,6 +320,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val oneTimeRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
                 .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .addTag(AtmosApplication.WALLPAPER_UPDATE_TAG)
                 .build()
 
             workManager.enqueueUniqueWork(
@@ -300,12 +413,18 @@ class MainViewModel @Inject constructor(
 
     private fun observeWork() {
         viewModelScope.launch {
-            workManager.getWorkInfosForUniqueWorkFlow(AtmosApplication.WORK_MANAGER)
+            workManager.getWorkInfosByTagFlow(AtmosApplication.WALLPAPER_UPDATE_TAG)
                 .collectLatest { workInfos ->
                     val workInfo = workInfos.firstOrNull()
                     if (workInfo != null) {
                         val progressMessage = workInfo.progress.getString(WallpaperWorker.PROGRESS_KEY) ?: ""
                         val isRunning = workInfo.state == WorkInfo.State.RUNNING
+                        val isFinished = workInfo.state == WorkInfo.State.SUCCEEDED
+
+                        if (isFinished) {
+                            refreshData()
+                        }
+
                         val shouldShowLoading = isRunning
 
                         val currentProvider =
@@ -331,14 +450,6 @@ class MainViewModel @Inject constructor(
                                     "$currentProvider: ${application.getString(R.string.initializing)}" else displayProgress,
                                 loadingProgress = progressValue,
                                 isWorkRunning = isRunning
-                            )
-                        }
-                    } else {
-                        _uiState.update { state ->
-                            state.copy(
-                                isLoading = false,
-                                loadingProgress = 0f,
-                                loadingMessage = ""
                             )
                         }
                     }
@@ -380,6 +491,7 @@ class MainViewModel @Inject constructor(
 
             try {
                 updateWallpaperUseCase(updatedImage, useCache = true)
+                refreshData()
             } finally {
                 _uiState.update {
                     it.copy(

@@ -97,7 +97,7 @@ class GetAtmosImageUseCase @Inject constructor(
                 }
             }
 
-            val query = getImageQueryUseCase(weatherData)
+            val query = getImageQueryUseCase(weatherData, lat, lon)
             val locationQuery: String? = if (useLocation && weatherData.isDay) locationName else null
 
             val atmosImageResult = withTimeoutOrNull(15_000L) {

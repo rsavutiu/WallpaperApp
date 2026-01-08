@@ -18,6 +18,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.smartmuseum.wallpaperapp.ui.MainApp
 import com.smartmuseum.wallpaperapp.ui.MainViewModel
 import com.smartmuseum.wallpaperapp.ui.NavigationEvent
+import com.smartmuseum.wallpaperapp.ui.components.LocationPickerDialog
 import com.smartmuseum.wallpaperapp.ui.wallpaper.AtmosLiveWallpaperService
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -68,6 +69,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            if (uiState.showLocationPicker) {
+                LocationPickerDialog(
+                    onDismiss = { viewModel.dismissLocationPicker() },
+                    onSearch = { viewModel.searchLocation(it) },
+                    searchResults = uiState.locationSearchResults,
+                    onLocationSelected = { viewModel.selectManualLocation(it) },
+                    isLoading = uiState.isSearchingLocation
+                )
+            }
+
             MainApp(
                 uiState = uiState,
                 selectImage = { viewModel.selectImage(it) },
@@ -79,6 +90,12 @@ class MainActivity : ComponentActivity() {
                 setDebugTemperature = { viewModel.setDebugTemperature(it) },
                 setDebugWeatherCode = { viewModel.setDebugWeatherCode(it) },
                 setDynamicWallpaperEnabled = { viewModel.setDynamicWallpaperEnabled(it) },
+                setShowLocation = { viewModel.setShowLocation(it) },
+                setShowTemperature = { viewModel.setShowTemperature(it) },
+                setShowForecast = { viewModel.setShowForecast(it) },
+                onToggleTemperatureUnit = { viewModel.toggleTemperatureUnit() },
+                onToggleShowSunTransitions = { viewModel.toggleShowSunTransitions() },
+                onChooseManualLocation = { viewModel.showManualLocationPicker() },
                 isTV = isTV
             )
         }

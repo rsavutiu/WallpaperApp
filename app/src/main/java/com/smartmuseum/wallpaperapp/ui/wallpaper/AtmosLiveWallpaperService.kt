@@ -127,26 +127,28 @@ private const val SNOW_SHADER = WEATHER_HEADER + """
         float tempFactor = clamp((iTemperature + 15.0) / 15.0, 0.0, 1.0); 
         float sizeBase = mix(0.03, 0.06, tempFactor);
         float blurBase = mix(0.01, 0.03, tempFactor);
-        for(int i=0; i<3; i++) {
+        // Increased to 6 layers for "heavier" look
+        for(int i=0; i<6; i++) {
             float layer = float(i);
-            float scale = 7.0 + layer * 5.0;
+            float scale = 6.0 + layer * 6.0;
             float2 p = uv * scale;
             float col_id = floor(p.x);
             float speed_rand = hash11(col_id + layer * 31.7);
-            float speed = (0.15 + speed_rand * 0.2) * (0.6 + layer * 0.4);
+            float speed = (0.2 + speed_rand * 0.25) * (0.6 + layer * 0.4);
             p.y -= iTime * speed;
             float2 id = floor(p);
-            p.x += (noise(float2(iTime * 0.1, id.x + layer * 10.0)) - 0.5) * 0.2;
+            p.x += (noise(float2(iTime * 0.1, id.x + layer * 10.0)) - 0.5) * 0.3;
             float2 f = fract(p);
             float2 h = float2(hash12(id + layer * 13.0), hash12(id + layer * 27.0));
-            if (h.x > 0.85 - iIntensity * 0.1) {
-                float2 pos = 0.07 + h * 0.8;
+            // Lowered threshold and increased intensity impact for more flakes
+            if (h.x > 0.75 - iIntensity * 0.35) {
+                float2 pos = 0.05 + h * 0.9;
                 float d = length(f - pos);
-                float size = sizeBase * (0.6 + h.y * 0.5);
-                acc += smoothstep(size, size - blurBase, d) * (0.5 + h.x * 0.5);
+                float size = sizeBase * (0.5 + h.y * 0.6);
+                acc += smoothstep(size, size - blurBase, d) * (0.4 + h.x * 0.6);
             }
         }
-        float a = clamp(acc * (0.7 + iIntensity * 0.3), 0.0, 1.0);
+        float a = clamp(acc * (0.8 + iIntensity * 0.4), 0.0, 1.0);
         return half4(a, a, a, a);
     }
 """
@@ -232,6 +234,9 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         private var isCelsius: Boolean = true
         private var isCalendarEnabled: Boolean = true
+        private var showLocation: Boolean = true
+        private var showTemperature: Boolean = true
+        private var showForecast: Boolean = true
 
         private var forcedWeatherCode: Int? = null
         private var forcedTemperature: Double? = null
@@ -270,6 +275,9 @@ class AtmosLiveWallpaperService : WallpaperService() {
             scope.launch {
                 isCelsius = userPreferencesRepository.isCelsius.first()
                 isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
+                showLocation = userPreferencesRepository.showLocation.first()
+                showTemperature = userPreferencesRepository.showTemperature.first()
+                showForecast = userPreferencesRepository.showForecast.first()
 
                 launch {
                     userPreferencesRepository.isCelsius.collect {
@@ -280,6 +288,24 @@ class AtmosLiveWallpaperService : WallpaperService() {
                 launch {
                     userPreferencesRepository.isCalendarEnabled.collect {
                         isCalendarEnabled = it
+                        drawFrame()
+                    }
+                }
+                launch {
+                    userPreferencesRepository.showLocation.collect {
+                        showLocation = it
+                        drawFrame()
+                    }
+                }
+                launch {
+                    userPreferencesRepository.showTemperature.collect {
+                        showTemperature = it
+                        drawFrame()
+                    }
+                }
+                launch {
+                    userPreferencesRepository.showForecast.collect {
+                        showForecast = it
                         drawFrame()
                     }
                 }
@@ -419,8 +445,8 @@ class AtmosLiveWallpaperService : WallpaperService() {
 
         override fun onSensorChanged(event: SensorEvent?) {
             if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
-                val rawX = event.values[0] * 120f
-                val rawY = event.values[1] * 100f
+                val rawX = event.values[1] * 120f
+                val rawY = event.values[0] * 100f
 
                 if (abs(rawX - smoothedGyroX) > deadZone * 50f) {
                     smoothedGyroX += (rawX - smoothedGyroX) * smoothingFactor
@@ -481,6 +507,9 @@ class AtmosLiveWallpaperService : WallpaperService() {
                     accentColor = accentColor,
                     isCelsius = isCelsius,
                     isCalendarEnabled = isCalendarEnabled,
+                    showLocation = showLocation,
+                    showTemperature = showTemperature,
+                    showForecast = showForecast,
                     forcedTemperature = forcedTemperature,
                     forcedWeatherCode = forcedWeatherCode,
                     lastUpdateTimestamp = lastUpdateTimestamp

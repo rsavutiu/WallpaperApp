@@ -6,12 +6,11 @@ import com.smartmuseum.wallpaperapp.domain.model.HourlyForecast
 import com.smartmuseum.wallpaperapp.domain.model.WeatherData
 import com.smartmuseum.wallpaperapp.domain.repository.WallpaperRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
 
 class GetWeatherUseCase @Inject constructor(
     private val wallpaperRepository: WallpaperRepository,
+    private val getSunDataUseCase: GetSunDataUseCase,
     @ApplicationContext private val context: Context
 ) {
     suspend operator fun invoke(lat: Double, lon: Double): Result<WeatherData> {
@@ -20,17 +19,8 @@ class GetWeatherUseCase @Inject constructor(
             val current = weather.current
             val isDay = current.is_day == 1
 
-            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault())
-            val sunriseTime = try {
-                sdf.parse(weather.daily.sunrise[0])?.time ?: 0L
-            } catch (e: Exception) {
-                0L
-            }
-            val sunsetTime = try {
-                sdf.parse(weather.daily.sunset[0])?.time ?: 0L
-            } catch (e: Exception) {
-                0L
-            }
+            // Fetch precise sun data including twilights
+            val sunData = getSunDataUseCase(lat, lon)
 
             val weatherData = WeatherData(
                 currentTemp = current.temperature_2m,
@@ -51,8 +41,8 @@ class GetWeatherUseCase @Inject constructor(
                 rain = current.rain,
                 showers = current.showers,
                 cloudCover = current.cloud_cover,
-                sunrise = sunriseTime,
-                sunset = sunsetTime
+                sunrise = sunData.sunrise,
+                sunset = sunData.sunset
             )
             Result.success(weatherData)
         } catch (e: Exception) {

@@ -30,10 +30,14 @@ class DataStoreUserPreferencesRepository @Inject constructor(
         val IS_CELSIUS = booleanPreferencesKey("is_celsius")
         val LONGITUDE = doublePreferencesKey("longitude")
         val LATITUDE = doublePreferencesKey("latitude")
+        val SHOW_SUN_TRANSITIONS = booleanPreferencesKey("show_sun_transitions")
         val PREFERRED_PROVIDER = stringPreferencesKey("preferred_provider")
         val IS_CALENDAR_ENABLED = booleanPreferencesKey("is_calendar_enabled")
         val USE_LOCATION = booleanPreferencesKey("use_location")
         val IS_DYNAMIC_WALLPAPER_ENABLED = booleanPreferencesKey("is_dynamic_wallpaper_enabled")
+        val SHOW_LOCATION = booleanPreferencesKey("show_location")
+        val SHOW_TEMPERATURE = booleanPreferencesKey("show_temperature")
+        val SHOW_FORECAST = booleanPreferencesKey("show_forecast")
         val FORCED_WEATHER_CODE = intPreferencesKey("forced_weather_code")
         val FORCED_TEMPERATURE = doublePreferencesKey("forced_temperature")
     }
@@ -47,16 +51,6 @@ class DataStoreUserPreferencesRepository @Inject constructor(
             preferences[PreferencesKeys.IS_CELSIUS] = isCelsius
         }
     }
-
-    /*    override val lastUpdateTimestamp: Flow<Long> = context.dataStore.data.map { preferences ->
-            preferences[PreferencesKeys.LAST_UPDATE] ?: 0L
-        }
-
-        override suspend fun updateLastUpdateTimestamp() {
-            context.dataStore.edit { preferences ->
-                preferences[PreferencesKeys.LAST_UPDATE] = System.currentTimeMillis()
-            }
-        }*/
 
     override suspend fun getLastKnownLocation(): Pair<Double, Double> {
         val preferences = context.dataStore.data.first()
@@ -72,6 +66,17 @@ class DataStoreUserPreferencesRepository @Inject constructor(
             preferences[PreferencesKeys.LONGITUDE] = location.second
         }
     }
+
+    override suspend fun setShowSunTransistions(show: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_SUN_TRANSITIONS] = show
+        }
+    }
+
+    override val showSunTransistions: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SHOW_SUN_TRANSITIONS] ?: true
+    }
+
 
     override val preferredImageProvider: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[PreferencesKeys.PREFERRED_PROVIDER] ?: "Unsplash"
@@ -121,6 +126,36 @@ class DataStoreUserPreferencesRepository @Inject constructor(
     override suspend fun setDynamicWallpaperEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_DYNAMIC_WALLPAPER_ENABLED] = enabled
+        }
+    }
+
+    override val showLocation: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SHOW_LOCATION] ?: true
+    }
+
+    override suspend fun setShowLocation(show: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_LOCATION] = show
+        }
+    }
+
+    override val showTemperature: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SHOW_TEMPERATURE] ?: true
+    }
+
+    override suspend fun setShowTemperature(show: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_TEMPERATURE] = show
+        }
+    }
+
+    override val showForecast: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.SHOW_FORECAST] ?: true
+    }
+
+    override suspend fun setShowForecast(show: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SHOW_FORECAST] = show
         }
     }
 

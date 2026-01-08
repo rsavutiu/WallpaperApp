@@ -20,7 +20,6 @@ import com.smartmuseum.wallpaperapp.domain.usecase.GetAtmosImageUseCase
 import com.smartmuseum.wallpaperapp.domain.usecase.UpdateWallpaperUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 @HiltWorker
@@ -43,33 +42,38 @@ class WallpaperWorker @AssistedInject constructor(
         try {
             setForegroundAsync(getForegroundInfo())
         } catch (e: Exception) {
-            Log.e(TAG, e.message ?: e.localizedMessage ?: e.stackTraceToString())
-            if (!e.message.isNullOrBlank() || e.localizedMessage.isNullOrBlank()) {
-                Log.e(TAG, e.stackTraceToString())
-            }
+            Log.e(TAG, "Foreground service error: ${e.message}")
         }
-        delay(1500)
+
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_location)))
-        val location = locationTracker.getCurrentLocation()
-        val lastKnownLocation: Pair<Double, Double> = if (location != null) {
-            Log.i(TAG, "Current location: $location. Will set as last known location")
-            val temp = Pair(location.latitude, location.longitude)
-            userPreferencesRepository.setLastKnownLocation(temp)
-            temp
+
+        val useLocation = userPreferencesRepository.useLocation.first()
+        val lastKnown = userPreferencesRepository.getLastKnownLocation()
+
+        val targetLocation: Pair<Double, Double> = if (useLocation) {
+            val gpsLocation = locationTracker.getCurrentLocation()
+            if (gpsLocation != null) {
+                Log.i(TAG, "Using GPS location: ${gpsLocation.latitude}, ${gpsLocation.longitude}")
+                val coords = Pair(gpsLocation.latitude, gpsLocation.longitude)
+                userPreferencesRepository.setLastKnownLocation(coords)
+                coords
+            } else {
+                Log.w(TAG, "GPS failed, falling back to last known: $lastKnown")
+                lastKnown
+            }
         } else {
-            Log.w(TAG, "Using old location: $location")
-            userPreferencesRepository.getLastKnownLocation()
+            Log.i(TAG, "Manual mode: Using saved location: $lastKnown")
+            lastKnown
         }
-        delay(1500)
+
         setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_weather)))
-        val atmosImageResult =
-            getAtmosImageUseCase(lastKnownLocation.first, lastKnownLocation.second)
-        delay(500)
+
+        val atmosImageResult = getAtmosImageUseCase(targetLocation.first, targetLocation.second)
+        
         return atmosImageResult.fold(
             onSuccess = { atmosImage ->
                 setProgress(workDataOf(PROGRESS_KEY to context.getString(R.string.stage_wallpaper)))
 
-                // Fetch calendar events if enabled
                 val isCalendarEnabled = userPreferencesRepository.isCalendarEnabled.first()
                 val events = if (isCalendarEnabled) {
                     calendarRepository.getTodaysEvents()
@@ -86,13 +90,13 @@ class WallpaperWorker @AssistedInject constructor(
                 }
             },
             onFailure = {
+                Log.e(TAG, "Failed to get Atmos image: ${it.message}")
                 Result.retry()
             }
         )
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        // Create the Notification Channel (Required for API 26+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 "atmos_updates",
@@ -112,7 +116,6 @@ class WallpaperWorker @AssistedInject constructor(
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
 
-        // Pass the notification and the type declared in the Manifest
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ForegroundInfo(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {

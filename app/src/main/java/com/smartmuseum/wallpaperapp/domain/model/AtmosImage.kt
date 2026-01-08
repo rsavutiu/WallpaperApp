@@ -13,7 +13,8 @@ data class AtmosImage(
     val explanation: String? = null,
     val metadata: Map<String, String> = emptyMap(),
     val weather: WeatherData? = null,
-    val calendarEvents: List<CalendarEvent>? = null
+    val calendarEvents: List<CalendarEvent>? = null,
+    val sunData: SunData? = null
 )
 
 @Serializable
@@ -31,6 +32,18 @@ data class WeatherData(
     val cloudCover: Int,
     val sunrise: Long = 0L, // Epoch millis
     val sunset: Long = 0L   // Epoch millis
+)
+
+@Serializable
+data class SunData(
+    val astronomicalDawn: Long,
+    val astronomicalDusk: Long,
+    val civilDawn: Long,
+    val civilDusk: Long,
+    val nauticalDawn: Long,
+    val nauticalDusk: Long,
+    val sunrise: Long,
+    val sunset: Long
 )
 
 @Serializable

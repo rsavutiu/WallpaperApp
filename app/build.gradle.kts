@@ -106,6 +106,12 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // Add JSR305 for FindBugs annotations used by SunCalc
+    implementation(libs.jsr305)
+
+    // SunCalc
+    implementation("org.shredzone.commons:commons-suncalc:3.9")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

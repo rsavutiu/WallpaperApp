@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -42,9 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
-import com.smartmuseum.wallpaperapp.ui.components.AtmosDashboard
+import com.smartmuseum.wallpaperapp.ui.components.dashboard.AtmosDashboard
 import com.smartmuseum.wallpaperapp.ui.screens.SetupScreen
 import com.smartmuseum.wallpaperapp.ui.screens.WallpaperScreen
+import com.smartmuseum.wallpaperapp.ui.screens.WallpaperSettingsScreen
 import com.smartmuseum.wallpaperapp.ui.theme.WallpaperAppTheme
 
 @Composable
@@ -59,6 +61,12 @@ fun MainApp(
     setDebugWeatherCode: (Int?) -> Unit,
     setDebugTemperature: (Double?) -> Unit,
     setDynamicWallpaperEnabled: (Boolean) -> Unit,
+    setShowLocation: (Boolean) -> Unit,
+    setShowTemperature: (Boolean) -> Unit,
+    setShowForecast: (Boolean) -> Unit,
+    onToggleTemperatureUnit: () -> Unit,
+    onToggleShowSunTransitions: () -> Unit,
+    onChooseManualLocation: () -> Unit,
     isTV: Boolean = false
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -144,6 +152,17 @@ fun MainApp(
                                 },
                                 label = { Text(stringResource(R.string.tab_setup)) }
                             )
+                            NavigationBarItem(
+                                selected = selectedTab == 2,
+                                onClick = { selectedTab = 2 },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Tune,
+                                        contentDescription = null
+                                    )
+                                },
+                                label = { Text("Settings") }
+                            )
                         }
                     }
                 }
@@ -161,6 +180,9 @@ fun MainApp(
                     currentWallpaper = uiState.currentWallpaper,
                     isCelsius = uiState.isCelsius,
                     isCalendarEnabled = uiState.isCalendarEnabled,
+                    showLocation = uiState.showLocation,
+                    showTemperature = uiState.showTemperature,
+                    showForecast = uiState.showForecast,
                     onToggleUnit = { toggleTemperatureUnit() },
                     forceWeatherCode = uiState.debugWeatherCode,
                     forceTemp = if (uiState.debugWeatherCode != null) uiState.debugTemperature else null
@@ -185,8 +207,7 @@ fun MainApp(
                             1 -> {
                                 SetupScreen(
                                     uiState = uiState,
-                                    toggleUseLocation = toggleUseLocation,
-                                    toggleTemperatureUnit = toggleTemperatureUnit,
+                                    onToggleShowLocation = setShowLocation,
                                     setCalendarEnabled = { enabled ->
                                         if (enabled) {
                                             permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALENDAR))
@@ -197,12 +218,23 @@ fun MainApp(
                                     updateRefreshPeriod = { minutes ->
                                         updateRefreshPeriod(minutes)
                                     },
-                                    onRunUpdate = { triggerUpdate(true) },
                                     onDebugWeatherChange = { setDebugWeatherCode(it) },
                                     debugWeatherCode = uiState.debugWeatherCode,
                                     debugTemp = uiState.debugTemperature,
                                     onDebugTempChange = { setDebugTemperature(it) },
                                     setDynamicWallpaperEnabled = { setDynamicWallpaperEnabled(it) }
+                                )
+                            }
+
+                            2 -> {
+                                WallpaperSettingsScreen(
+                                    uiState = uiState,
+                                    toggleUseLocation = toggleUseLocation,
+                                    onToggleShowTemperature = setShowTemperature,
+                                    onToggleShowForecast = setShowForecast,
+                                    onToggleTemperatureUnit = onToggleTemperatureUnit,
+                                    onToggleShowSunTransitions = onToggleShowSunTransitions,
+                                    onChooseManualLocation = onChooseManualLocation
                                 )
                             }
                         }

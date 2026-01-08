@@ -12,57 +12,53 @@ import javax.inject.Inject
 
 class GetImageQueryUseCase @Inject constructor(
     private val getMoonPhaseUseCase: GetMoonPhaseUseCase,
+    private val getSunDataUseCase: GetSunDataUseCase,
     @ApplicationContext private val context: Context
 ) {
-    operator fun invoke(weather: WeatherData): String {
+    operator fun invoke(weather: WeatherData, lat: Double, lon: Double): String {
         val now = System.currentTimeMillis()
         val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val month = calendar.get(Calendar.MONTH)
 
         val monthName = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.ENGLISH) ?: ""
-        val season = when (month) {
-            Calendar.DECEMBER, Calendar.JANUARY, Calendar.FEBRUARY -> "Winter"
-            Calendar.MARCH, Calendar.APRIL, Calendar.MAY -> "Spring"
-            Calendar.JUNE, Calendar.JULY, Calendar.AUGUST -> "Summer"
-            Calendar.SEPTEMBER, Calendar.OCTOBER, Calendar.NOVEMBER -> "Autumn"
-            else -> ""
-        }
+
+        val (season, isPolar) = getSeason(lat, month)
 
         val tempDescriptor = when {
+            weather.currentTemp > 35 -> "Torrid"
             weather.currentTemp > 30 -> "Hot"
             weather.currentTemp > 20 -> "Warm"
             weather.currentTemp > 10 -> "Cool"
             weather.currentTemp > 0 -> "Cold"
+            weather.currentTemp > -10 -> "Very Cold"
             else -> "Freezing"
         }
 
-        // Determine Time of Day descriptor based on actual sun position if available
-        val sunrise = weather.sunrise
-        val sunset = weather.sunset
+        // Precise sun data integration
+        val sunData = getSunDataUseCase(lat, lon)
 
         val timeOfDay = when {
-            sunrise == 0L || sunset == 0L -> {
-                // Fallback to hardcoded hours if sun data is missing
-                when (hour) {
-                    in 5..6 -> "Sunrise"
-                    in 7..10 -> "Morning"
-                    in 11..16 -> "Day"
-                    in 17..18 -> "Sunset"
-                    in 19..20 -> "Twilight"
-                    else -> "Night"
-                }
-            }
-            // Sunrise: 30 mins before to 30 mins after
-            now in (sunrise - 1800000)..(sunrise + 1800000) -> "Sunrise"
-            // Sunset: 45 mins before to 15 mins after
-            now in (sunset - 2700000)..(sunset + 900000) -> "Sunset"
-            // Twilight: 15 mins after to 60 mins after sunset (Blue Hour)
-            now in (sunset + 900000)..(sunset + 3600000) -> "Twilight"
-            // Daytime: Between sunrise and sunset windows
-            now in (sunrise + 1800001)..(sunset - 2700001) -> {
-                // If within first 3 hours after sunrise window, it's morning
-                if (now < sunrise + 12600000) "Morning" else "Day"
+            // Astronomical Dawn (Stars start to fade)
+            now in sunData.astronomicalDawn..<sunData.nauticalDawn -> "Astronomical Dawn"
+            // Nautical Dawn (Horizon becomes visible)
+            now in sunData.nauticalDawn..<sunData.civilDawn -> "Nautical Dawn"
+            // Civil Dawn (Golden hour starts)
+            now in sunData.civilDawn..<sunData.sunrise -> "Civil Dawn Golden Hour"
+            // Sunrise (Sun hits the horizon)
+            now in sunData.sunrise..(sunData.sunrise + 1800000) -> "Sunrise"
+
+            // Sunset (Sun drops to horizon)
+            now in (sunData.sunset - 2700000)..sunData.sunset -> "Sunset"
+            // Civil Dusk (Golden/Blue hour transition)
+            now in sunData.sunset..<sunData.civilDusk -> "Civil Twilight Blue Hour"
+            // Nautical Dusk (Sky becomes dark blue)
+            now in sunData.civilDusk..<sunData.nauticalDusk -> "Nautical Twilight"
+            // Astronomical Dusk (Last light fades)
+            now in sunData.nauticalDusk..<sunData.astronomicalDusk -> "Astronomical Twilight"
+
+            // Daytime: Between sunrise window and sunset window
+            now in (sunData.sunrise + 1800001)..(sunData.sunset - 2700001) -> {
+                if (now < sunData.sunrise + 12600000) "Morning" else "Day"
             }
             else -> "Night"
         }
@@ -75,15 +71,12 @@ class GetImageQueryUseCase @Inject constructor(
                     context.getString(R.string.query_night_sky)
                 }
             }
-
+            timeOfDay.contains("Dawn") || timeOfDay.contains("Twilight") || timeOfDay.contains("Dusk") -> {
+                "Landscape $timeOfDay"
+            }
             timeOfDay == "Sunrise" || timeOfDay == "Sunset" -> {
                 "Landscape $timeOfDay"
             }
-
-            timeOfDay == "Twilight" -> {
-                "Landscape Twilight Blue Hour"
-            }
-
             else -> {
                 // Daytime logic
                 when {
@@ -97,15 +90,16 @@ class GetImageQueryUseCase @Inject constructor(
 
         // Build the final query
         val queryParts = mutableListOf<String>()
+        if (isPolar) queryParts.add("Polar")
         queryParts.add(baseQuery)
 
-        // Add season and month for context (except for rainy/snowy/overcast where it might clutter)
+        // Add context for non-heavy weather
         if (weather.snowfall == 0.0 && weather.rain == 0.0 && weather.showers == 0.0) {
             queryParts.add(season)
             queryParts.add(monthName)
         }
 
-        // Add temperature for daytime queries
+        // Add temperature for daytime and transitional queries
         if (timeOfDay != "Night") {
             queryParts.add(tempDescriptor)
         }
@@ -113,9 +107,46 @@ class GetImageQueryUseCase @Inject constructor(
         val ret = queryParts.joinToString(" ").replace("  ", " ").trim()
 
         if (BuildConfig.DEBUG) {
-            Log.i(TAG, "Query Generated: $ret (Phase: $timeOfDay, Temp: ${weather.currentTemp})")
+            Log.i(
+                TAG,
+                "Query Generated: $ret (Lat: $lat, Phase: $timeOfDay, Temp: ${weather.currentTemp})"
+            )
         }
         return ret
+    }
+
+    private fun getSeason(lat: Double, month: Int): Pair<String, Boolean> {
+        val isPolar = lat > 66.5 || lat < -66.5
+        val isTropical = lat in -23.5..23.5
+
+        val season = when {
+            isTropical -> {
+                if (lat >= 0) { // Northern Tropics
+                    if (month in 4..8) "Wet Season" else "Dry Season"
+                } else { // Southern Tropics
+                    if (month in 9..11 || month in 0..2) "Wet Season" else "Dry Season"
+                }
+            }
+
+            lat >= 0 -> { // Northern Hemisphere (Temperate)
+                when (month) {
+                    Calendar.DECEMBER, Calendar.JANUARY, Calendar.FEBRUARY -> "Winter"
+                    Calendar.MARCH, Calendar.APRIL, Calendar.MAY -> "Spring"
+                    Calendar.JUNE, Calendar.JULY, Calendar.AUGUST -> "Summer"
+                    else -> "Autumn"
+                }
+            }
+
+            else -> { // Southern Hemisphere (Temperate)
+                when (month) {
+                    Calendar.JUNE, Calendar.JULY, Calendar.AUGUST -> "Winter"
+                    Calendar.SEPTEMBER, Calendar.OCTOBER, Calendar.NOVEMBER -> "Spring"
+                    Calendar.DECEMBER, Calendar.JANUARY, Calendar.FEBRUARY -> "Summer"
+                    else -> "Autumn"
+                }
+            }
+        }
+        return season to isPolar
     }
 
     companion object {

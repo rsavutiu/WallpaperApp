@@ -25,7 +25,7 @@ import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
 import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
-import com.smartmuseum.wallpaperapp.ui.components.AtmosDashboard
+import com.smartmuseum.wallpaperapp.ui.components.dashboard.AtmosDashboard
 import com.smartmuseum.wallpaperapp.ui.theme.WallpaperAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first

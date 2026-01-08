@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Atmos</string>
+    <string name="metadata_type_nasa">nasa_apod</string>
+    <string name="metadata_type_unsplash">unsplash</string>
     <string name="query_overcast">Overcast Landscapes</string>
     <string name="query_sunny">Sunny Landscapes</string>
     <string name="query_rainy">Rainy Landscapes</string>

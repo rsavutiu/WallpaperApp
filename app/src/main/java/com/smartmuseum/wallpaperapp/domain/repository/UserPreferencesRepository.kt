@@ -24,6 +24,19 @@ interface UserPreferencesRepository {
     val isDynamicWallpaperEnabled: Flow<Boolean>
     suspend fun setDynamicWallpaperEnabled(enabled: Boolean)
 
+    // Wallpaper content settings
+    val showLocation: Flow<Boolean>
+    suspend fun setShowLocation(show: Boolean)
+
+    val showTemperature: Flow<Boolean>
+    suspend fun setShowTemperature(show: Boolean)
+
+    val showForecast: Flow<Boolean>
+    suspend fun setShowForecast(show: Boolean)
+
+    val showSunTransistions: Flow<Boolean>
+    suspend fun setShowSunTransistions(show: Boolean)
+
     // Debug forced weather options
     val forcedWeatherCode: Flow<Int?>
     suspend fun setForcedWeatherCode(code: Int?)
