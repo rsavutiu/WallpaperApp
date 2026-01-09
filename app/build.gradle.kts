@@ -114,7 +114,7 @@ dependencies {
     implementation(libs.jsr305)
 
     // SunCalc
-    implementation("org.shredzone.commons:commons-suncalc:3.9")
+    implementation(libs.commons.suncalc)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
