@@ -1,10 +1,10 @@
 package com.smartmuseum.wallpaperapp.domain.usecase
 
 import android.content.Context
-import android.util.Log
 import com.google.gson.Gson
 import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
 import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
+import com.smartmuseum.wallpaperapp.data.Log
 import com.smartmuseum.wallpaperapp.data.repository.NasaImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.PexelsImageProvider
 import com.smartmuseum.wallpaperapp.data.repository.PixabayImageProvider

@@ -1,51 +1,27 @@
-# --- General Android ---
--keepattributes SourceFile,LineNumberTable
--keepattributes *Annotation*
--keepattributes Signature
--keepattributes InnerClasses,EnclosingMethod
+# Add project specific ProGuard rules here.
+# You can find more samples at https://r8.googlesource.com/r8/+/main/compatibility-tool/configs/examples
 
-# --- Jetpack Compose ---
--keep class androidx.compose.ui.platform.** { *; }
--keep class androidx.compose.runtime.** { *; }
-
-# --- Hilt / Dagger ---
--keep class dagger.hilt.android.internal.managers.** { *; }
--keep class * extends dager.hilt.android.internal.managers.**
--keep @dagger.hilt.android.AndroidEntryPoint class *
--keep @dagger.hilt.EntryPoint class *
-
-# --- Gson ---
-# Keep model classes used for JSON serialization
+# Keep the data models used by Retrofit/Gson from being obfuscated or removed.
+# This is essential for JSON serialization/deserialization to work in release builds.
+-keep class com.smartmuseum.wallpaperapp.data.remote.** { *; }
 -keep class com.smartmuseum.wallpaperapp.domain.model.** { *; }
--keep class com.google.gson.reflect.TypeToken
--keep class * extends com.google.gson.TypeAdapter
--keep class com.google.gson.stream.JsonReader
--keep class com.google.gson.stream.JsonWriter
 
+# Hilt uses generated code, so we need to keep annotations and generated classes.
+-keep @dagger.hilt.android.HiltAndroidApp class *
+-keep class * extends dagger.hilt.android.internal.managers.ApplicationComponentManager
+-keep class * extends dagger.hilt.android.internal.managers.ActivityComponentManager
+-keep class * extends dagger.hilt.android.internal.managers.FragmentComponentManager
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager
+-keep class * extends dagger.hilt.android.internal.managers.ViewModelComponentManager
+-keep class * extends dagger.hilt.android.internal.managers.ServiceComponentManager
 
--dontwarn edu.umd.cs.findbugs.annotations.**
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn edu.umd.cs.findbugs.annotations.Nullable
 
-
-# --- Retrofit ---
--keepattributes RuntimeVisibleAnnotations, RuntimeInvisibleAnnotations, RuntimeVisibleParameterAnnotations, RuntimeInvisibleParameterAnnotations
--keep class retrofit2.** { *; }
--keepclasseswithmembers interface retrofit2.** { *; }
--dontwarn retrofit2.**
--keep class okhttp3.** { *; }
--dontwarn okhttp3.**
--dontwarn okio.**
-
-# --- Coil ---
--keep class io.coilkt.coil.** { *; }
--dontwarn io.coilkt.coil.**
-
-# --- WorkManager ---
--keep class androidx.work.** { *; }
--dontwarn androidx.work.**
-
-# --- App Specific ---
-# Keep the Wallpaper and Dream services
--keep class com.smartmuseum.wallpaperapp.ui.dream.AtmosDreamService { *; }
-
-# Keep the Application class
--keep class com.smartmuseum.wallpaperapp.AtmosApplication { *; }
+# Keep Hilt entry points and generated modules
+-keep @dagger.hilt.EntryPoint class *
+-keep @dagger.hilt.InstallIn class *
+-keep @dagger.Module class *
+-keep @dagger.assisted.AssistedInject class *
+-keep @dagger.assisted.AssistedFactory class *
+-keep @dagger.assisted.Assisted class *

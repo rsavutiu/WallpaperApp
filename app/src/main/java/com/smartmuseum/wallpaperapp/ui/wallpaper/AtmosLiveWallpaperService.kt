@@ -12,7 +12,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.service.wallpaper.WallpaperService
-import android.util.Log
 import android.view.SurfaceHolder
 import androidx.palette.graphics.Palette
 import androidx.work.ExistingWorkPolicy
@@ -24,6 +23,7 @@ import com.google.gson.Gson
 import com.smartmuseum.wallpaperapp.AtmosApplication
 import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.METADATA_FILE
 import com.smartmuseum.wallpaperapp.AtmosApplication.Companion.RAW_IMAGE_FILE
+import com.smartmuseum.wallpaperapp.data.Log
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.domain.repository.UserPreferencesRepository
 import com.smartmuseum.wallpaperapp.worker.WallpaperWorker

@@ -1,9 +1,9 @@
 package com.smartmuseum.wallpaperapp.domain.usecase
 
 import android.content.Context
-import android.util.Log
 import com.smartmuseum.wallpaperapp.BuildConfig
 import com.smartmuseum.wallpaperapp.R
+import com.smartmuseum.wallpaperapp.data.Log
 import com.smartmuseum.wallpaperapp.domain.model.WeatherData
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Calendar

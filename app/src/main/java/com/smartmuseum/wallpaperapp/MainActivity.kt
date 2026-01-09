@@ -93,7 +93,6 @@ class MainActivity : ComponentActivity() {
                 setShowLocation = { viewModel.setShowLocation(it) },
                 setShowTemperature = { viewModel.setShowTemperature(it) },
                 setShowForecast = { viewModel.setShowForecast(it) },
-                onToggleTemperatureUnit = { viewModel.toggleTemperatureUnit() },
                 onToggleShowSunTransitions = { viewModel.toggleShowSunTransitions() },
                 onChooseManualLocation = { viewModel.showManualLocationPicker() },
                 isTV = isTV

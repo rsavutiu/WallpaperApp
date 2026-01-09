@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,9 +47,11 @@ import com.smartmuseum.wallpaperapp.R
 import com.smartmuseum.wallpaperapp.domain.model.AtmosImage
 import com.smartmuseum.wallpaperapp.ui.components.dashboard.AtmosDashboard
 import com.smartmuseum.wallpaperapp.ui.screens.SetupScreen
+import com.smartmuseum.wallpaperapp.ui.screens.TvSettingsScreen
 import com.smartmuseum.wallpaperapp.ui.screens.WallpaperScreen
 import com.smartmuseum.wallpaperapp.ui.screens.WallpaperSettingsScreen
 import com.smartmuseum.wallpaperapp.ui.theme.WallpaperAppTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun MainApp(
@@ -64,12 +68,12 @@ fun MainApp(
     setShowLocation: (Boolean) -> Unit,
     setShowTemperature: (Boolean) -> Unit,
     setShowForecast: (Boolean) -> Unit,
-    onToggleTemperatureUnit: () -> Unit,
     onToggleShowSunTransitions: () -> Unit,
     onChooseManualLocation: () -> Unit,
     isTV: Boolean = false
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showTvSettings by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -87,6 +91,18 @@ fun MainApp(
                 Manifest.permission.READ_CALENDAR
             )
         )
+        if (isTV) {
+            triggerUpdate(false)
+        }
+    }
+
+    if (isTV) {
+        LaunchedEffect(uiState.refreshPeriodInMinutes) {
+            while (true) {
+                delay(uiState.refreshPeriodInMinutes * 60 * 1000)
+                triggerUpdate(false)
+            }
+        }
     }
 
     WallpaperAppTheme(customColorScheme = uiState.customColorScheme) {
@@ -188,7 +204,26 @@ fun MainApp(
                     forceTemp = if (uiState.debugWeatherCode != null) uiState.debugTemperature else null
                 )
 
-                if (!isTV) {
+                if (isTV) {
+                    // TV-specific UI: Settings button in top corner
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp)
+                    ) {
+                        IconButton(
+                            onClick = { showTvSettings = !showTvSettings },
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        ) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                } else {
+                    // Mobile UI
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -232,7 +267,7 @@ fun MainApp(
                                     toggleUseLocation = toggleUseLocation,
                                     onToggleShowTemperature = setShowTemperature,
                                     onToggleShowForecast = setShowForecast,
-                                    onToggleTemperatureUnit = onToggleTemperatureUnit,
+                                    onToggleTemperatureUnit = toggleTemperatureUnit,
                                     onToggleShowSunTransitions = onToggleShowSunTransitions,
                                     onChooseManualLocation = onChooseManualLocation
                                 )
@@ -274,6 +309,23 @@ fun MainApp(
                             }
                         }
                     }
+                }
+
+                if (showTvSettings && isTV) {
+                    TvSettingsScreen(
+                        uiState = uiState,
+                        setCalendarEnabled = setCalendarEnabled,
+                        setDynamicWallpaperEnabled = setDynamicWallpaperEnabled,
+                        updateRefreshPeriod = updateRefreshPeriod,
+                        onToggleShowLocation = setShowLocation,
+                        onToggleShowTemperature = setShowTemperature,
+                        onToggleShowForecast = setShowForecast,
+                        onToggleShowSunTransitions = onToggleShowSunTransitions,
+                        onToggleTemperatureUnit = toggleTemperatureUnit,
+                        onChooseManualLocation = onChooseManualLocation,
+                        toggleUseLocation = toggleUseLocation,
+                        onDismiss = { showTvSettings = false }
+                    )
                 }
             }
         }
